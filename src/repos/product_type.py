@@ -146,11 +146,14 @@ class ProductTypeRepo(NonDeletableRepo):
 
     @with_session
     def get_unique_slug(self, product_type, session):
-        slug = generate_slug(product_type)
-        if self.is_slug_used(slug, session=session):
-            slug = generate_slug(product_type, with_hash=True)
+        generated_slug = generate_slug(product_type)
+        if generated_slug == product_type.slug:
+            return generated_slug
 
-        return slug
+        if self.is_slug_used(generated_slug, session=session):
+            return generate_slug(product_type, with_hash=True)
+
+        return generated_slug
 
     class DoesNotExist(Exception):
         pass

@@ -76,11 +76,14 @@ class CategoryRepo(Repo):
 
     @with_session
     def get_unique_slug(self, category, session):
-        slug = generate_slug(category)
-        if self.is_slug_used(slug, session=session):
-            slug = generate_slug(category, with_hash=True)
+        generated_slug = generate_slug(category)
+        if generated_slug == category.slug:
+            return generated_slug
 
-        return slug
+        if self.is_slug_used(generated_slug, session=session):
+            return generate_slug(category, with_hash=True)
+
+        return generated_slug
 
     class DoesNotExist(Exception):
         pass
