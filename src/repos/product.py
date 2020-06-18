@@ -35,12 +35,11 @@ class ProductRepo(NonDeletableRepo):
             product.images.append(product_image)
 
         session.add(product)
+        session.flush()
 
         product.images
         product.created_on
         product.updated_on
-
-        session.flush()
 
         return product
 
@@ -80,9 +79,10 @@ class ProductRepo(NonDeletableRepo):
                 new_images.append(product_image)
         product.images = new_images
 
-        session.add(product)
-
         session.flush()
+
+        product.created_on
+        product.updated_on
 
         return product
 

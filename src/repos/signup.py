@@ -41,9 +41,6 @@ class SignupRepo(Repo):
         signup.user_name = name
         signup.user_password = encrypt_password(password)
 
-        session.add(signup)
-        session.flush()
-
         return signup
 
     class DoesNotExist(Exception):

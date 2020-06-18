@@ -18,11 +18,11 @@ class CategoryRepo(Repo):
         category.slug = self.get_unique_slug(category, session=session)
 
         session.add(category)
+        session.flush()
 
         category.created_on
         category.updated_on
 
-        session.flush()
 
         return category
 
@@ -35,6 +35,9 @@ class CategoryRepo(Repo):
         category.slug = self.get_unique_slug(category, session=session)
 
         session.flush()
+
+        category.created_on
+        category.updated_on
 
         return category
 

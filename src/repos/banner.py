@@ -38,12 +38,11 @@ class BannerRepo(Repo):
         banner.image = self.__file_storage.save_file(image)
 
         session.add(banner)
+        session.flush()
 
         banner.link_texts
         banner.created_on
         banner.updated_on
-
-        session.flush()
 
         return banner
 
@@ -79,6 +78,11 @@ class BannerRepo(Repo):
             banner.image = (image
                             if isinstance(image, str)
                             else self.__file_storage.save_file(image))
+
+        session.flush()
+
+        banner.created_on
+        banner.updated_on
 
         return banner
 

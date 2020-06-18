@@ -14,12 +14,11 @@ class FeatureTypeRepo(Repo):
                        FeatureTypeName, session=session)
 
         session.add(feature_type)
+        session.flush()
 
         feature_type.names
         feature_type.created_on
         feature_type.updated_on
-
-        session.flush()
 
         return feature_type
 
@@ -29,6 +28,11 @@ class FeatureTypeRepo(Repo):
 
         set_intl_texts(names, feature_type, 'names',
                        FeatureTypeName, session=session)
+
+        session.flush()
+
+        feature_type.created_on
+        feature_type.updated_on
 
         return feature_type
 

@@ -16,13 +16,12 @@ class FeatureValueRepo(Repo):
         feature_value.feature_type_id = feature_type.id
 
         session.add(feature_value)
+        session.flush()
 
         feature_value.names
         feature_value.feature_type
         feature_value.created_on
         feature_value.updated_on
-
-        session.flush()
 
         return feature_value
 
@@ -34,6 +33,11 @@ class FeatureValueRepo(Repo):
                        FeatureValueName, session=session)
 
         feature_value.feature_type_id = feature_type.id
+
+        session.flush()
+
+        feature_value.created_on
+        feature_value.updated_on
 
         return feature_value
 

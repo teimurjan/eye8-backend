@@ -44,12 +44,10 @@ class ProductTypeRepo(NonDeletableRepo):
         product_type.image = self.__file_storage.save_file(image)
 
         session.add(product_type)
+        session.flush()
 
         product_type.created_on
         product_type.updated_on
-
-        session.flush()
-
         product_type.category = category
 
         return product_type
@@ -83,6 +81,11 @@ class ProductTypeRepo(NonDeletableRepo):
             product_type.image = (image
                                   if isinstance(image, str)
                                   else self.__file_storage.save_file(image))
+        
+        session.flush()
+
+        product_type.created_on
+        product_type.updated_on
 
         return product_type
 

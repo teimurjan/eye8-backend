@@ -14,6 +14,7 @@ from src.models.promo_code import ProductXPromoCodeTable
 from src.repos.base import NonDeletableRepo, with_session
 from src.utils.array import find_in_array
 
+
 class OrderRepo(NonDeletableRepo):
     def __init__(self, db_conn):
         super().__init__(db_conn, Order)
@@ -120,7 +121,6 @@ class OrderRepo(NonDeletableRepo):
 
         order.items = new_order_items
 
-        session.add(order)
         session.flush()
 
         order.created_on

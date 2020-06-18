@@ -22,11 +22,10 @@ class PromoCodeRepo(NonDeletableRepo):
         promo_code.products = products
 
         session.add(promo_code)
+        session.flush()
 
         promo_code.created_on
         promo_code.updated_on
-
-        session.flush()
 
         return promo_code
 
@@ -37,7 +36,11 @@ class PromoCodeRepo(NonDeletableRepo):
         promo_code.is_active = is_active
         promo_code.disable_on_use = disable_on_use
         promo_code.products = products
+
         session.flush()
+
+        promo_code.created_on
+        promo_code.updated_on
 
         return promo_code
 
