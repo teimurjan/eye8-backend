@@ -10,24 +10,28 @@ class FeatureValueRepo(Repo):
     def add_feature_value(self, names, feature_type, session):
         feature_value = FeatureValue()
 
-        set_intl_texts(names, feature_value, 'names', FeatureValueName, session=session)
+        set_intl_texts(names, feature_value, 'names',
+                       FeatureValueName, session=session)
 
         feature_value.feature_type_id = feature_type.id
 
         session.add(feature_value)
 
-        session.flush()
-
         feature_value.names
         feature_value.feature_type
+        feature_value.created_on
+        feature_value.updated_on
+
+        session.flush()
 
         return feature_value
 
     @with_session
     def update_feature_value(self, id_, names, feature_type, session):
         feature_value = self.get_by_id(id_, session=session)
-        
-        set_intl_texts(names, feature_value, 'names', FeatureValueName, session=session)
+
+        set_intl_texts(names, feature_value, 'names',
+                       FeatureValueName, session=session)
 
         feature_value.feature_type_id = feature_type.id
 

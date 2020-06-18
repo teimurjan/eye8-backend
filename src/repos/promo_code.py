@@ -23,6 +23,9 @@ class PromoCodeRepo(NonDeletableRepo):
 
         session.add(promo_code)
 
+        promo_code.created_on
+        promo_code.updated_on
+
         session.flush()
 
         return promo_code

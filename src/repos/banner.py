@@ -25,7 +25,8 @@ class BannerRepo(Repo):
         banner = Banner()
 
         set_intl_texts(texts, banner, 'texts', BannerText, session=session)
-        set_intl_texts(link_texts, banner, 'link_texts', BannerLinkText, session=session)
+        set_intl_texts(link_texts, banner, 'link_texts',
+                       BannerLinkText, session=session)
 
         banner.link = link
         banner.text_color = text_color
@@ -39,6 +40,8 @@ class BannerRepo(Repo):
         session.add(banner)
 
         banner.link_texts
+        banner.created_on
+        banner.updated_on
 
         session.flush()
 
@@ -62,7 +65,8 @@ class BannerRepo(Repo):
         banner = self.get_by_id(id_, session=session)
 
         set_intl_texts(texts, banner, 'texts', BannerText, session=session)
-        set_intl_texts(link_texts, banner, 'link_texts', BannerLinkText, session=session)
+        set_intl_texts(link_texts, banner, 'link_texts',
+                       BannerLinkText, session=session)
 
         banner.link = link
         banner.text_color = text_color

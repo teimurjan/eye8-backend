@@ -19,6 +19,9 @@ class CategoryRepo(Repo):
 
         session.add(category)
 
+        category.created_on
+        category.updated_on
+
         session.flush()
 
         return category

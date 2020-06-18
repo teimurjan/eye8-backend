@@ -36,8 +36,9 @@ class ProductRepo(NonDeletableRepo):
 
         session.add(product)
 
-        # fetch images within the session for future use
         product.images
+        product.created_on
+        product.updated_on
 
         session.flush()
 

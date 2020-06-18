@@ -45,6 +45,9 @@ class ProductTypeRepo(NonDeletableRepo):
 
         session.add(product_type)
 
+        product_type.created_on
+        product_type.updated_on
+
         session.flush()
 
         product_type.category = category

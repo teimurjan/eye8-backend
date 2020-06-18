@@ -19,10 +19,11 @@ class CurrencyRateRepo(Repo):
         currency_rate.value = value
 
         session.add(currency_rate)
-        session.flush()
 
         currency_rate.created_on
         currency_rate.updated_on
+
+        session.flush()
 
         return currency_rate
 

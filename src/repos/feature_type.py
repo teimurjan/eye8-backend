@@ -11,13 +11,15 @@ class FeatureTypeRepo(Repo):
         feature_type = FeatureType()
 
         set_intl_texts(names, feature_type, 'names',
-                             FeatureTypeName, session=session)
+                       FeatureTypeName, session=session)
 
         session.add(feature_type)
 
-        session.flush()
-
         feature_type.names
+        feature_type.created_on
+        feature_type.updated_on
+
+        session.flush()
 
         return feature_type
 
@@ -25,7 +27,8 @@ class FeatureTypeRepo(Repo):
     def update_feature_type(self, id_, names, session):
         feature_type = self.get_by_id(id_, session=session)
 
-        set_intl_texts(names, feature_type, 'names', FeatureTypeName, session=session)
+        set_intl_texts(names, feature_type, 'names',
+                       FeatureTypeName, session=session)
 
         return feature_type
 
