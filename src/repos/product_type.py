@@ -132,7 +132,7 @@ class ProductTypeRepo(NonDeletableRepo):
 
     @with_session
     def is_slug_used(self, slug, session):
-        return self.get_query(session).filter(ProductType.slug == slug).count() > 0
+        return self.get_query(session=session).filter(ProductType.slug == slug).count() > 0
 
     @with_session
     def get_by_slug(self, slug, session):
