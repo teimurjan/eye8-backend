@@ -1,0 +1,28 @@
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+  
+  <url>
+    <loc>{{ base_url }}</loc>
+    <lastmod>2020-03-25</lastmod>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>{{ base_url }}/how-it-works</loc>
+    <lastmod>2020-05-22</lastmod>
+    <changefreq>weekly</changefreq>
+  </url>
+  {%- for product_type in product_types %}
+  <url>
+    <loc>{{ base_url }}/products/{{ product_type.slug }}</loc>
+    <lastmod>{{ product_type.updated_on.strftime('%Y-%m-%d') }}</lastmod>
+    <changefreq>daily</changefreq>
+  </url>
+  {%- endfor -%}
+  {%- for category in categories %}
+  <url>
+    <loc>{{ base_url }}/categories/{{ category.slug }}/products</loc>
+    <lastmod>{{ category.updated_on.strftime('%Y-%m-%d') }}</lastmod>
+    <changefreq>daily</changefreq>
+  </url>
+  {%- endfor -%}
+</urlset>
