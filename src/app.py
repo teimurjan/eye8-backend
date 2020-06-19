@@ -631,7 +631,7 @@ class App:
 
         @limiter.request_filter
         def limiter_request_filter():
-            return request.method.lower() == 'options' or request.host == self.flask_app.config.get('HOST')
+            return request.method.lower() == 'options' or 'localhost' in request.host
 
     def __init_file_storage(self):
         self.__file_storage = AWSStorage(
