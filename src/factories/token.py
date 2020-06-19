@@ -11,7 +11,7 @@ class TokenFactory:
     @staticmethod
     def create(type_, entity):
         if type_ == ACCESS_TOKEN_TYPE:
-            exp_date = datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+            exp_date = datetime.datetime.utcnow() + datetime.timedelta(hours=6)
             payload = {
                 'user_id': entity.id,
                 'name': entity.name,

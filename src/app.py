@@ -9,6 +9,8 @@ from flask.templating import render_template
 from flask_caching import Cache
 from flask_cors import CORS
 from flask_mail import Mail as FlaskMail
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 from paths import APP_ROOT_PATH
 from src.abstract_view import AbstractView
@@ -122,21 +124,17 @@ from src.views.search import SearchView
 class App:
     def __init__(self):
         self.flask_app = Flask(__name__)
-        self.flask_app.config.from_object(os.environ.get(
-            'APP_SETTINGS', 'config.DevelopmentConfig'))
+        self.__init_config()
+
         self.cache = Cache(self.flask_app)
-        CORS(self.flask_app,
-             origins=self.flask_app.config['ALLOWED_ORIGINS'])
-        flask_mail = FlaskMail(self.flask_app)
-        self.mail = Mail(flask_mail)
-        self.__file_storage = AWSStorage(
-            self.flask_app.config['AWS_BUCKET_NAME'],
-            self.flask_app.config['AWS_DEFAULT_REGION'],
-            self.flask_app.config['AWS_ACCESS_KEY_ID'],
-            self.flask_app.config['AWS_SECRET_ACCESS_KEY']
-        )
+        self.__init_cors()
+        self.__init_mail_client()
+        self.__init_limiter()
+        self.__init_file_storage()
+
         engine = db.create_engine(self.flask_app.config['DB_URL'], echo=True)
         self.__db_conn = engine.connect()
+
         self.__es = Elasticsearch(self.flask_app.config['ELASTICSEARCH_URL'])
 
         self.__init_repos()
@@ -191,9 +189,13 @@ class App:
         )
 
     def __init_search(self):
-        if not self.__es.indices.exists(index="category"):
+        if self.__es.indices.exists(index="category"):
+            self.__es.indices.delete('category')
+        else:
             self.__es.indices.create(index='category')
-        if not self.__es.indices.exists(index="product_type"):
+        if self.__es.indices.exists(index="product_type"):
+            self.__es.indices.delete('product_type')
+        else:
             self.__es.indices.create(index='product_type')
 
         for category in self.__category_repo.get_all():
@@ -619,3 +621,37 @@ class App:
                                   base_url=self.flask_app.config.get('HOST'))
 
             return Response(xml, mimetype='text/xml')
+
+    def __init_limiter(self):
+        limiter = Limiter(
+            self.flask_app,
+            key_func=get_remote_address,
+            default_limits=["60/minute"],
+        )
+
+        @limiter.request_filter
+        def limiter_request_filter():
+            return request.method.lower() == 'options' or request.host == self.flask_app.config.get('HOST')
+
+    def __init_file_storage(self):
+        self.__file_storage = AWSStorage(
+            self.flask_app.config['AWS_BUCKET_NAME'],
+            self.flask_app.config['AWS_DEFAULT_REGION'],
+            self.flask_app.config['AWS_ACCESS_KEY_ID'],
+            self.flask_app.config['AWS_SECRET_ACCESS_KEY']
+        )
+
+    def __init_mail_client(self):
+        flask_mail = FlaskMail(self.flask_app)
+        self.mail = Mail(flask_mail)
+
+    def __init_cors(self):
+        CORS(
+            self.flask_app,
+            origins=self.flask_app.config['ALLOWED_ORIGINS']
+        )
+
+    def __init_config(self):
+        self.flask_app.config.from_object(
+            os.environ.get('APP_SETTINGS', 'config.DevelopmentConfig')
+        )
