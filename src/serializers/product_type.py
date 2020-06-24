@@ -14,6 +14,7 @@ class ProductTypeSerializer(IntlSerializer):
         self._names = product_type.names
         self._descriptions = product_type.descriptions
         self._short_descriptions = product_type.short_descriptions
+        self._instagram_links = product_type.instagram_links
         self._image = product_type.image
         self._category = product_type.category
         self._feature_types = product_type.feature_types
@@ -30,6 +31,7 @@ class ProductTypeSerializer(IntlSerializer):
             'name': self._serialize_name(),
             'description': self._serialize_description(),
             'short_description': self._serialize_short_description(),
+            'instagram_links': self._serialize_instagram_links(),
             'image': self._image,
             'category': self._serialize_category(),
             'feature_types': self._serialize_feature_types(),
@@ -49,6 +51,9 @@ class ProductTypeSerializer(IntlSerializer):
 
     def _serialize_short_description(self):
         return self._get_intl_field_from(self._short_descriptions)
+
+    def _serialize_instagram_links(self):
+        return [{'id': instagram_link.id, 'link': instagram_link.link} for instagram_link in self._instagram_links]
 
     def with_serialized_category(self):
         self._with_serialized_relation(

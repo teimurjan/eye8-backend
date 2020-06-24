@@ -26,6 +26,12 @@ CREATE_PRODUCT_TYPE_VALIDATION_RULES = {
         'required': True,
         'nullable': False,
     },
+    'instagram_links':  {
+        'type': 'list',
+        'schema': {'type': 'string', 'nullable': False, 'regex': r'(https?:\/\/(?:www\.)?instagram\.com\/p\/([^/?#&]+)).*'},
+        'required': True,
+        'nullable': False,
+    },
     'category_id': {'required': True, 'type': 'integer'},
     'image': {'required': True, 'nullable': False}
 }

@@ -13,6 +13,7 @@ from src.models.product_type import ProductType
 from src.models.product_type.name import ProductTypeName
 from src.models.product_type.description import ProductTypeDescription
 from src.models.product_type.short_description import ProductTypeShortDescription
+from src.models.product_type.instagram_link import ProductTypeInstagramLink
 from src.models.banner import Banner
 from src.models.banner.text import BannerText
 from src.models.banner.link_text import BannerLinkText

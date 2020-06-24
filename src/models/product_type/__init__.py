@@ -17,6 +17,13 @@ class ProductType(NonDeletableModel):
         lazy='joined',
         cascade="all, delete, delete-orphan"
     )
+
+    instagram_links = orm.relationship(
+        'ProductTypeInstagramLink',
+        backref='product_type',
+        lazy='joined',
+        cascade="all, delete, delete-orphan"
+    )
     descriptions = orm.relationship(
         'ProductTypeDescription',
         backref='product_type',
@@ -51,6 +58,8 @@ class ProductType(NonDeletableModel):
             return self.descriptions
         if key == 'short_descriptions':
             return self.short_descriptions
+        if key == 'instagram_links':
+            return self.instagram_links
 
         return super().__getitem__(key)
 

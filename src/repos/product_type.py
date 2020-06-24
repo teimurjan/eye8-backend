@@ -1,27 +1,36 @@
 from typing import List
 
-from sqlalchemy import desc, orm, asc, func
+from sqlalchemy import asc, desc, func, orm
 
 from src.models import (ProductType, ProductTypeDescription, ProductTypeName,
                         ProductTypeShortDescription)
 from src.models.product import Product
-from src.repos.base import set_intl_texts, NonDeletableRepo, with_session
+from src.models.product_type.instagram_link import ProductTypeInstagramLink
+from src.repos.base import NonDeletableRepo, set_intl_texts, with_session
 from src.storage.base import Storage
 from src.utils.slug import generate_slug
 from src.utils.sorting import ProductTypeSortingType
 
+def set_instagram_links(product_type, instagram_links):
+    instagram_links_ = []
+    for link in instagram_links:
+        instagram_link = ProductTypeInstagramLink()
+        instagram_link.link = link
+        instagram_links_.append(instagram_link)
+    product_type.instagram_links = instagram_links_
 
 class ProductTypeRepo(NonDeletableRepo):
     def __init__(self, db_conn, file_storage: Storage):
         super().__init__(db_conn, ProductType)
         self.__file_storage = file_storage
-
+    
     @with_session
     def add_product_type(
         self,
         names,
         descriptions,
         short_descriptions,
+        instagram_links,
         image,
         category,
         feature_types,
@@ -36,6 +45,8 @@ class ProductTypeRepo(NonDeletableRepo):
                        'descriptions', ProductTypeDescription, session=session)
         set_intl_texts(short_descriptions, product_type,
                        'short_descriptions', ProductTypeShortDescription, session=session)
+
+        set_instagram_links(product_type, instagram_links)
 
         for feature_type in feature_types:
             product_type.feature_types.append(feature_type)
@@ -59,6 +70,7 @@ class ProductTypeRepo(NonDeletableRepo):
         names,
         descriptions,
         short_descriptions,
+        instagram_links,
         image,
         category,
         feature_types,
@@ -72,6 +84,8 @@ class ProductTypeRepo(NonDeletableRepo):
             descriptions, product_type, 'descriptions', ProductTypeDescription, session=session)
         set_intl_texts(short_descriptions, product_type,
                        'short_descriptions', ProductTypeShortDescription, session=session)
+
+        set_instagram_links(product_type, instagram_links)
 
         product_type.feature_types = feature_types
         product_type.slug = self.get_unique_slug(product_type, session=session)

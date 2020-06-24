@@ -2,7 +2,7 @@ UPDATE_PRODUCT_TYPE_VALIDATION_RULES = {
     'names': {
         'type': 'dict',
         'keyschema': {'regex': r'^\d+$'},
-        'valueschema': {'type': 'string', 'required': True, 'empty': False, 'nullable': False,'maxlength': 50},
+        'valueschema': {'type': 'string', 'required': True, 'empty': False, 'nullable': False, 'maxlength': 50},
         'required': True,
         'nullable': False,
     },
@@ -16,13 +16,19 @@ UPDATE_PRODUCT_TYPE_VALIDATION_RULES = {
     'short_descriptions': {
         'type': 'dict',
         'keyschema': {'regex': r'^\d+$'},
-        'valueschema': {'type': 'string', 'required': True, 'empty': False, 'nullable': False,'maxlength': 1000},
+        'valueschema': {'type': 'string', 'required': True, 'empty': False, 'nullable': False, 'maxlength': 1000},
         'required': True,
         'nullable': False,
     },
     'feature_types':  {
         'type': 'list',
         'schema': {'type': 'integer', 'nullable': False},
+        'required': True,
+        'nullable': False,
+    },
+    'instagram_links':  {
+        'type': 'list',
+        'schema': {'type': 'string', 'nullable': False, 'regex': r'(https?:\/\/(?:www\.)?instagram\.com\/p\/([^/?#&]+)).*'},
         'required': True,
         'nullable': False,
     },
