@@ -191,12 +191,11 @@ class App:
     def __init_search(self):
         if self.__es.indices.exists(index="category"):
             self.__es.indices.delete('category')
-        else:
-            self.__es.indices.create(index='category')
+        self.__es.indices.create(index='category')
+
         if self.__es.indices.exists(index="product_type"):
             self.__es.indices.delete('product_type')
-        else:
-            self.__es.indices.create(index='product_type')
+        self.__es.indices.create(index='product_type')
 
         for category in self.__category_repo.get_all():
             self.__category_service.set_to_search_index(category)
