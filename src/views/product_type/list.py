@@ -34,17 +34,16 @@ class ProductTypeListView(ValidatableView, PaginatableView):
     def get(self, request):
         product_types = []
         meta = None
-        join_products = False
+        join_products = request.args.get('products') == '1'
         sorting_type = get_sorting_type_from_request(request)
         only_fields = request.args.getlist('fields')
-        available = request.args.get('available') == '1'
+        only_available = request.args.get('available') == '1'
 
         pagination_data = self._get_pagination_data(request)
         if pagination_data:
-            join_products = True
             product_types, count = self._service.get_all(
                 join_products=join_products,
-                only_available=available,
+                only_available=only_available,
                 sorting_type=sorting_type,
                 offset=pagination_data['offset'],
                 limit=pagination_data['limit'],
