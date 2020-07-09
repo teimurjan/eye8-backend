@@ -31,7 +31,7 @@ class PromoCodeRepo(NonDeletableRepo):
 
     @with_session
     def update_promo_code(self, id_, is_active, disable_on_use, products, session):
-        promo_code = self.get_by_id(id_, False, session=session)
+        promo_code = self.get_by_id(id_, session=session)
 
         promo_code.is_active = is_active
         promo_code.disable_on_use = disable_on_use
