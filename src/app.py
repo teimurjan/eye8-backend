@@ -8,14 +8,12 @@ from flask import Flask, Response, jsonify, request, send_from_directory
 from flask.templating import render_template
 from flask_caching import Cache
 from flask_cors import CORS
-from flask_mail import Mail as FlaskMail
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_mail import Mail as FlaskMail
 
 from paths import APP_ROOT_PATH
 from src.abstract_view import AbstractView
-from src.constants.cache import (USER_ORDERS_CACHE_KEY,
-                                 make_user_orders_cache_key)
 from src.constants.status_codes import OK_CODE
 from src.mail import Mail
 from src.middleware.http.authorize import AuthorizeHttpMiddleware
@@ -55,7 +53,8 @@ from src.services.promo_code import PromoCodeService
 from src.services.signup import SignupService
 from src.services.user import UserService
 from src.storage.aws_storage import AWSStorage
-from src.utils.cache import make_cache_invalidator, response_filter
+from src.utils.cache import response_filter
+from src.cache.category_product_types import CategoryProductTypesCache
 from src.validation_rules.authentication import AUTHENTICATION_VALIDATION_RULES
 from src.validation_rules.banner.create import CREATE_BANNER_VALIDATION_RULES
 from src.validation_rules.banner.update import UPDATE_BANNER_VALIDATION_RULES
@@ -209,8 +208,7 @@ class App:
         language_middleware = LanguageHttpMiddleware(self.__language_repo)
         middlewares = [authorize_middleware, language_middleware]
 
-        orders_on_respond = make_cache_invalidator(
-            self.cache, USER_ORDERS_CACHE_KEY)
+        category_product_types_cache = CategoryProductTypesCache(self.cache)
 
         self.flask_app.add_url_rule(
             '/api/auth/login',
@@ -270,7 +268,8 @@ class App:
                     self.__category_service,
                     CategorySerializer
                 ),
-                middlewares=middlewares
+                middlewares=middlewares,
+                on_respond=category_product_types_cache.get_invalidate_hook(),
             ),
             methods=['GET', 'POST']
         )
@@ -283,7 +282,8 @@ class App:
                     self.__category_service,
                     CategorySerializer
                 ),
-                middlewares=middlewares
+                middlewares=middlewares,
+                on_respond=category_product_types_cache.get_invalidate_hook(),
             ),
             methods=['GET', 'PUT', 'DELETE']
         )
@@ -300,13 +300,19 @@ class App:
         )
         self.flask_app.add_url_rule(
             '/api/categories/<path:category_slug>/product_types',
-            view_func=AbstractView.as_view(
-                'category_product_types',
-                concrete_view=ProductTypeByCategoryView(
-                    self.__product_type_service,
-                    ProductTypeSerializer
-                ),
-                middlewares=middlewares
+            view_func=self.cache.cached(
+                60*60,
+                response_filter=response_filter,
+                make_cache_key=category_product_types_cache.make_cache_key
+            )(
+                AbstractView.as_view(
+                    'category_product_types',
+                    concrete_view=ProductTypeByCategoryView(
+                        self.__product_type_service,
+                        ProductTypeSerializer
+                    ),
+                    middlewares=middlewares
+                )
             ),
             methods=['GET']
         )
@@ -430,7 +436,8 @@ class App:
                     self.__product_type_service,
                     ProductTypeSerializer
                 ),
-                middlewares=middlewares
+                middlewares=middlewares,
+                on_respond=category_product_types_cache.get_invalidate_hook()
             ),
             methods=['GET', 'POST']
         )
@@ -443,7 +450,8 @@ class App:
                     self.__product_type_service,
                     ProductTypeSerializer
                 ),
-                middlewares=middlewares
+                middlewares=middlewares,
+                on_respond=category_product_types_cache.get_invalidate_hook()
             ),
             methods=['GET', 'PUT', 'DELETE']
         )
@@ -497,7 +505,6 @@ class App:
                     OrderSerializer
                 ),
                 middlewares=middlewares,
-                on_respond=orders_on_respond
             ),
             methods=['GET', 'PUT', 'DELETE']
         )
@@ -511,7 +518,6 @@ class App:
                     OrderSerializer
                 ),
                 middlewares=middlewares,
-                on_respond=orders_on_respond
             ),
             methods=['GET', 'POST']
         )
