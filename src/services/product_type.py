@@ -30,8 +30,8 @@ class ProductTypeService:
     def create(self, data, *args, **kwargs):
         try:
             with self._repo.session() as s:
-                category = self._category_repo.get_by_id(
-                    data['category_id'],
+                categories = self._category_repo.filter_by_ids(
+                    data['categories'],
                     session=s
                 )
 
@@ -49,7 +49,7 @@ class ProductTypeService:
                     data['short_descriptions'],
                     data['instagram_links'],
                     data['image'],
-                    category,
+                    categories,
                     feature_types,
                     session=s
                 )
@@ -66,8 +66,8 @@ class ProductTypeService:
     def update(self, id_, data, *args, **kwargs):
         try:
             with self._repo.session() as s:
-                category = self._category_repo.get_by_id(
-                    data['category_id'],
+                categories = self._category_repo.filter_by_ids(
+                    data['categories'],
                     session=s
                 )
 
@@ -86,7 +86,7 @@ class ProductTypeService:
                     data['short_descriptions'],
                     data['instagram_links'],
                     data['image'],
-                    category,
+                    categories,
                     feature_types,
                     session=s
                 )
@@ -120,9 +120,12 @@ class ProductTypeService:
     def get_all_by_category(self, category_slug: str, sorting_type: ProductTypeSortingType, offset: int = None, limit: int = None):
         with self._repo.session() as s:
             category = self._category_repo.get_by_slug(
-                category_slug, session=s)
+                category_slug, session=s
+            )
             children_categories = self._category_repo.get_children(
-                category.id, session=s)
+                category.id,
+                session=s
+            )
             categories_ids = [category.id for category in children_categories]
             product_types, count = self._repo.get_all(
                 categories_ids,

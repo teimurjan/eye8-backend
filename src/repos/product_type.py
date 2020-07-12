@@ -3,13 +3,14 @@ from typing import List
 from sqlalchemy import asc, desc, func, orm
 
 from src.models import (ProductType, ProductTypeDescription, ProductTypeName,
-                        ProductTypeShortDescription)
+                        ProductTypeShortDescription, Category)
 from src.models.product import Product
 from src.models.product_type.instagram_link import ProductTypeInstagramLink
 from src.repos.base import NonDeletableRepo, set_intl_texts, with_session
 from src.storage.base import Storage
 from src.utils.slug import generate_slug
 from src.utils.sorting import ProductTypeSortingType
+
 
 def set_instagram_links(product_type, instagram_links):
     instagram_links_ = []
@@ -19,11 +20,12 @@ def set_instagram_links(product_type, instagram_links):
         instagram_links_.append(instagram_link)
     product_type.instagram_links = instagram_links_
 
+
 class ProductTypeRepo(NonDeletableRepo):
     def __init__(self, db_conn, file_storage: Storage):
         super().__init__(db_conn, ProductType)
         self.__file_storage = file_storage
-    
+
     @with_session
     def add_product_type(
         self,
@@ -32,7 +34,7 @@ class ProductTypeRepo(NonDeletableRepo):
         short_descriptions,
         instagram_links,
         image,
-        category,
+        categories,
         feature_types,
         session
     ):
@@ -51,7 +53,7 @@ class ProductTypeRepo(NonDeletableRepo):
         for feature_type in feature_types:
             product_type.feature_types.append(feature_type)
 
-        product_type.category_id = category.id
+        product_type.categories = categories
         product_type.image = self.__file_storage.save_file(image)
 
         session.add(product_type)
@@ -59,7 +61,6 @@ class ProductTypeRepo(NonDeletableRepo):
 
         product_type.created_on
         product_type.updated_on
-        product_type.category = category
 
         return product_type
 
@@ -72,7 +73,7 @@ class ProductTypeRepo(NonDeletableRepo):
         short_descriptions,
         instagram_links,
         image,
-        category,
+        categories,
         feature_types,
         session
     ):
@@ -89,13 +90,13 @@ class ProductTypeRepo(NonDeletableRepo):
 
         product_type.feature_types = feature_types
         product_type.slug = self.get_unique_slug(product_type, session=session)
-        product_type.category = category
+        product_type.categories = categories
 
         if image is not None:
             product_type.image = (image
                                   if isinstance(image, str)
                                   else self.__file_storage.save_file(image))
-        
+
         session.flush()
 
         product_type.created_on
@@ -117,7 +118,7 @@ class ProductTypeRepo(NonDeletableRepo):
         q = self.get_non_deleted_query(session=session)
 
         if category_ids is not None:
-            q = q.filter(ProductType.category_id.in_(category_ids))
+            q = q.options(orm.joinedload(ProductType.categories)).filter(Category.id.in_(category_ids))
 
         if join_products:
             q = (

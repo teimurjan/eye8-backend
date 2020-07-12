@@ -4,9 +4,17 @@ from sqlalchemy import Column, ForeignKey, Integer, String, Table, orm
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.sql.expression import case, exists, select
 
-from src.models.base import NonDeletableModel
+from src.models.base import BaseModel, NonDeletableModel
 from src.models.product import Product
 
+ProductTypeXCategoryTable = Table(
+    'product_type_x_category',
+    BaseModel.metadata,
+    Column('product_type_id', Integer, ForeignKey(
+        'product_type.id'), primary_key=True),
+    Column('category_id', Integer, ForeignKey(
+        'category.id'), primary_key=True)
+)
 
 class ProductType(NonDeletableModel):
     __tablename__ = 'product_type'
@@ -41,14 +49,12 @@ class ProductType(NonDeletableModel):
         lazy='select',
     )
     image = Column(String(255), nullable=True)
-    category_id = Column(
-        Integer,
-        ForeignKey(
-            'category.id'
-        ),
-        nullable=False
+    categories = orm.relationship(
+        'Category',
+        secondary=ProductTypeXCategoryTable,
+        lazy='joined',
+        backref=orm.backref('product_types', lazy='joined')
     )
-    category = orm.relationship("Category", lazy='joined')
     slug = Column(String(255), nullable=False, unique=True)
 
     def __getitem__(self, key):

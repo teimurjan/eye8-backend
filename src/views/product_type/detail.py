@@ -23,7 +23,7 @@ class ProductTypeDetailView(ValidatableView):
                 self
                 ._serializer_cls(product_type)
                 .in_language(None if should_get_raw_intl_field else request.language)
-                .with_serialized_category()
+                .with_serialized_categories()
                 .serialize()
             )
             return {'data': serialized_product_type}, OK_CODE

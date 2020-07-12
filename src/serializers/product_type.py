@@ -16,7 +16,7 @@ class ProductTypeSerializer(IntlSerializer):
         self._short_descriptions = product_type.short_descriptions
         self._instagram_links = product_type.instagram_links
         self._image = product_type.image
-        self._category = product_type.category
+        self._categories = product_type.categories
         self._feature_types = product_type.feature_types
         self._products = None
         self._slug = product_type.slug
@@ -33,7 +33,7 @@ class ProductTypeSerializer(IntlSerializer):
             'short_description': self._serialize_short_description(),
             'instagram_links': self._serialize_instagram_links(),
             'image': self._image,
-            'category': self._serialize_category(),
+            'categories': self._serialize_categories(),
             'feature_types': self._serialize_feature_types(),
             'products': self._products,
             'slug': self._slug,
@@ -55,14 +55,14 @@ class ProductTypeSerializer(IntlSerializer):
     def _serialize_instagram_links(self):
         return [{'id': instagram_link.id, 'link': instagram_link.link} for instagram_link in self._instagram_links]
 
-    def with_serialized_category(self):
-        self._with_serialized_relation(
-            '_category', Category, CategorySerializer, lambda serializer: serializer.in_language(self._language))
+    def with_serialized_categories(self):
+        self._with_serialized_relations(
+            '_categories', Category, CategorySerializer, lambda serializer: serializer.in_language(self._language))
 
         return self
 
-    def _serialize_category(self):
-        return self._serialize_relation('_category', Category)
+    def _serialize_categories(self):
+        return self._serialize_relations('_categories', Category)
 
     def with_serialized_feature_types(self):
         self._with_serialized_relations(

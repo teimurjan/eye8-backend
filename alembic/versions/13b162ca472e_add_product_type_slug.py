@@ -23,7 +23,7 @@ def upgrade():
 
     product_type_repo = ProductTypeRepo(op.get_bind(), None)
     with product_type_repo.session() as s:
-        for product_type in product_type_repo.get_all(session=s):
+        for product_type in product_type_repo.get_query(session=s).all():
             product_type.slug = product_type_repo.get_unique_slug(product_type, session=s)
         s.flush()
 

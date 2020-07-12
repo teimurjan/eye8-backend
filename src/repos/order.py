@@ -10,7 +10,6 @@ from src.models.order import order_item
 from src.models.product import Product
 from src.models.product_type import ProductType
 from src.models.product_type.name import ProductTypeName
-from src.models.promo_code import ProductXPromoCodeTable
 from src.repos.base import NonDeletableRepo, with_session
 from src.utils.array import find_in_array
 

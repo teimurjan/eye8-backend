@@ -32,6 +32,11 @@ CREATE_PRODUCT_TYPE_VALIDATION_RULES = {
         'required': True,
         'nullable': False,
     },
-    'category_id': {'required': True, 'type': 'integer'},
+    'categories': {
+        'type': 'list',
+        'schema': {'type': 'integer', 'nullable': False},
+        'required': True,
+        'nullable': False,
+    },
     'image': {'required': True, 'nullable': False}
 }
