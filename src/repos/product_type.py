@@ -118,7 +118,7 @@ class ProductTypeRepo(NonDeletableRepo):
         q = self.get_non_deleted_query(session=session)
 
         if category_ids is not None:
-            q = q.options(orm.joinedload(ProductType.categories)).filter(Category.id.in_(category_ids))
+            q = q.join(ProductType.categories).filter(Category.id.in_(category_ids))
 
         if join_products:
             q = (
