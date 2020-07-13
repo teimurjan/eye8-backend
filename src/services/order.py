@@ -152,7 +152,7 @@ class OrderService:
     def get_for_user(self, user_id, offset=None, limit=None, user=None):
         if user and (user.id == user_id or user.group.name in ['admin', 'manager']):
             return self._repo.get_for_user(user_id, offset=offset, limit=limit)
-        raise InvalidEntityFormat()
+        raise InvalidEntityFormat({'user': 'errors.invalid'})
 
     @allow_roles(['admin', 'manager'])
     def get_one(self, id_, user=None):
