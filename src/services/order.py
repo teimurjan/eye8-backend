@@ -39,8 +39,7 @@ class OrderService:
                 promo_code = None
 
                 if promo_code_value:
-                    promo_code = self._promo_code_repo.get_by_value(
-                        promo_code_value.lower(), False)
+                    promo_code = self._promo_code_repo.get_by_value(promo_code_value.lower(), session=s)
 
                     if not promo_code.is_active:
                         raise self.PromoCodeInvalid()
@@ -98,8 +97,7 @@ class OrderService:
                 promo_code = None
 
                 if promo_code_value:
-                    promo_code = self._promo_code_repo.get_by_value(
-                        promo_code_value.lower(), False)
+                    promo_code = self._promo_code_repo.get_by_value(promo_code_value.lower(), session=s)
 
                     if not promo_code.is_active:
                         raise self.PromoCodeInvalid()

@@ -21,8 +21,9 @@ class PromoCodeService:
                 return self._repo.add_promo_code(
                     data['value'].lower(),
                     data['discount'],
-                    data['is_active'],
-                    data['disable_on_use'],
+                    data.get('amount'),
+                    data.get('is_active', False),
+                    data.get('disable_on_use', False),
                     products,
                     session=s
                 )

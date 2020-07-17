@@ -10,6 +10,7 @@ class PromoCodeSerializer(IntlSerializer):
         super().__init__()
         self._id = promo_code.id
         self._discount = promo_code.discount
+        self._amount = promo_code.amount
         self._value = promo_code.value
         self._is_active = promo_code.is_active
         self._disable_on_use = promo_code.disable_on_use
@@ -22,6 +23,7 @@ class PromoCodeSerializer(IntlSerializer):
         return self._filter_fields({
             'id': self._id,
             'discount': self._discount,
+            'amount': self._amount,
             'value': self._value,
             'is_active': self._is_active,
             'disable_on_use': self._disable_on_use,

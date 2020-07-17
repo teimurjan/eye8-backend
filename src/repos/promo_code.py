@@ -10,13 +10,14 @@ class PromoCodeRepo(NonDeletableRepo):
         super().__init__(db_conn, PromoCode)
 
     @with_session
-    def add_promo_code(self, value, discount, is_active, disable_on_use, products, session):
+    def add_promo_code(self, value, discount, amount, is_active, disable_on_use, products, session):
         if self.is_value_used(value):
             raise self.ValueNotUnique()
 
         promo_code = PromoCode()
         promo_code.value = value
         promo_code.discount = discount
+        promo_code.amount = amount
         promo_code.is_active = is_active
         promo_code.disable_on_use = disable_on_use
         promo_code.products = products
@@ -49,7 +50,7 @@ class PromoCodeRepo(NonDeletableRepo):
         return self.get_query(session=session).filter(PromoCode.value == value).count() > 0
 
     @with_session
-    def get_by_value(self, value, session=None):
+    def get_by_value(self, value, session):
         q = (
             self
             .get_non_deleted_query(session=session)
