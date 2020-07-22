@@ -118,7 +118,8 @@ class ProductTypeRepo(NonDeletableRepo):
         q = self.get_non_deleted_query(session=session)
 
         if category_ids is not None:
-            q = q.join(ProductType.categories).filter(Category.id.in_(category_ids))
+            q = q.join(ProductType.categories).filter(
+                Category.id.in_(category_ids))
 
         if join_products:
             q = (
@@ -149,7 +150,7 @@ class ProductTypeRepo(NonDeletableRepo):
 
     @with_session
     def has_with_category(self, id_, session):
-        return self.get_non_deleted_query(session=session).filter(ProductType.category_id == id_).count() > 0
+        return self.get_non_deleted_query(session=session).join(ProductType.categories).filter(Category.id.in_([id_])).count() > 0
 
     @with_session
     def is_slug_used(self, slug, session):
