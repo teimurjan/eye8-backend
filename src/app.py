@@ -18,6 +18,7 @@ from src.constants.status_codes import OK_CODE
 from src.mail import Mail
 from src.middleware.http.authorize import AuthorizeHttpMiddleware
 from src.middleware.http.language import LanguageHttpMiddleware
+from src.middleware.http.re_init import ReInitMiddleware
 from src.repos.banner import BannerRepo
 from src.repos.category import CategoryRepo
 from src.repos.currency_rate import CurrencyRateRepo
@@ -118,12 +119,20 @@ from src.views.promo_code.value import PromoCodeValueView
 from src.views.refresh_token import RefreshTokenView
 from src.views.registration import RegistrationView
 from src.views.search import SearchView
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
 
 
 class App:
     def __init__(self):
         self.flask_app = Flask(__name__)
         self.__init_config()
+
+        if self.flask_app.config.get('SENTRY_DSN') is not None:
+            sentry_sdk.init(
+                dsn=self.flask_app.config['SENTRY_DSN'],
+                integrations=[FlaskIntegration()],
+            )
 
         self.cache = Cache(self.flask_app)
         self.__init_cors()
@@ -187,26 +196,43 @@ class App:
             self.__currency_rate_repo, self.__order_repo
         )
 
-    def __init_search(self):
-        if self.__es.indices.exists(index="category"):
-            self.__es.indices.delete('category')
-        self.__es.indices.create(index='category')
+    def __is_search_initialized(self, index):
+        return self.__es.indices.exists(index=index)
 
-        if self.__es.indices.exists(index="product_type"):
+    def __init_product_type_search(self):
+        if self.__is_search_initialized(index="product_type"):
             self.__es.indices.delete('product_type')
         self.__es.indices.create(index='product_type')
-
-        for category in self.__category_repo.get_all():
-            self.__category_service.set_to_search_index(category)
-
         product_types, _ = self.__product_type_repo.get_all()
         for product_type in product_types:
             self.__product_type_service.set_to_search_index(product_type)
 
+    def __init_category_search(self):
+        if self.__is_search_initialized(index="category"):
+            self.__es.indices.delete('category')
+        self.__es.indices.create(index='category')
+        for category in self.__category_repo.get_all():
+            self.__category_service.set_to_search_index(category)
+
+    def __init_search(self):
+        self.__init_product_type_search()
+        self.__init_category_search()
+
     def __init_api_routes(self):
+        re_init_category_search_middleware = ReInitMiddleware(
+            lambda: self.__is_search_initialized('category'),
+            self.__init_category_search
+        )
+        re_init_product_type_search_middleware = ReInitMiddleware(
+            lambda: self.__is_search_initialized('product_type'),
+            self.__init_product_type_search
+        )
         authorize_middleware = AuthorizeHttpMiddleware(self.__user_service)
         language_middleware = LanguageHttpMiddleware(self.__language_repo)
-        middlewares = [authorize_middleware, language_middleware]
+        middlewares = [
+            authorize_middleware,
+            language_middleware
+        ]
 
         category_product_types_cache = CategoryProductTypesCache(self.cache)
 
@@ -326,7 +352,11 @@ class App:
                     CategorySerializer,
                     ProductTypeSerializer
                 ),
-                middlewares=middlewares
+                middlewares=[
+                    *middlewares,
+                    re_init_product_type_search_middleware,
+                    re_init_category_search_middleware
+                ]
             ),
             methods=['GET']
         )
@@ -626,6 +656,10 @@ class App:
                                   base_url=self.flask_app.config.get('HOST'))
 
             return Response(xml, mimetype='text/xml')
+
+        @self.flask_app.route('/debug-sentry')
+        def trigger_error():
+            division_by_zero = 1 / 0
 
     def __init_limiter(self):
         limiter = Limiter(

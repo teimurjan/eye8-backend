@@ -27,6 +27,7 @@ class Config:
     MAIL_UNSUBSCRIBE_USERNAME=os.environ.get('EMAIL_UNSUBSCRIBE_USERNAME')
     MAIL_PASSWORD=os.environ.get('EMAIL_PASSWORD')
     CACHE_TYPE='simple'
+    SENTRY_DSN=os.environ.get('SENTRY_DSN')
 
 class ProductionConfig(Config):
     ENV = "production"
