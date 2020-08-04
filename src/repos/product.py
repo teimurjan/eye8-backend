@@ -100,7 +100,7 @@ class ProductRepo(NonDeletableRepo):
             self
             .get_query(session=session)
             .filter(Product.product_type_id == product_type_id)
-            .order_by(Product.id)
+            .order_by(Product.quantity.desc(), Product.id)
             .all()
         )
 
