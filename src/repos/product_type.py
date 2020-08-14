@@ -134,19 +134,19 @@ class ProductTypeRepo(NonDeletableRepo):
             if only_available:
                 q = q.filter(ProductType.is_available == True)
 
-        q = q.order_by(self._get_order_by_from_sorting_type(sorting_type))
+        q = q.order_by(*self._get_order_by_from_sorting_type(sorting_type))
 
         return q.offset(offset).limit(limit).all(), q.count()
 
     def _get_order_by_from_sorting_type(self, sorting_type: ProductTypeSortingType):
         if sorting_type == ProductTypeSortingType.PRICE_ASCENDING:
-            return asc(Product.calculated_price)
+            return [ProductType.is_available.desc(), asc(Product.calculated_price)]
         if sorting_type == ProductTypeSortingType.PRICE_DESCENDING:
-            return desc(Product.calculated_price)
+            return [ProductType.is_available.desc(), desc(Product.calculated_price)]
         if sorting_type == ProductTypeSortingType.NEWLY_ADDED:
-            return ProductType.id.desc()
+            return [ProductType.is_available.desc(), ProductType.id.desc()]
 
-        return ProductType.id
+        return [ProductType.id]
 
     @with_session
     def has_with_category(self, id_, session):
