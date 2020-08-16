@@ -10,7 +10,8 @@ class OrderItem(BaseModel):
     order_id = Column(
         Integer,
         ForeignKey('order.id'),
-        nullable=False
+        nullable=False,
+        index=True
     )
     quantity = Column(Integer, nullable=False)
     product_upc = Column(String, nullable=True)

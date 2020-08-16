@@ -14,7 +14,8 @@ class Product(NonDeletableModel):
         ForeignKey(
             'product_type.id'
         ),
-        nullable=False
+        nullable=False,
+        index=True
     )
     product_type = orm.relationship('ProductType', lazy='joined')
     images = orm.relationship(

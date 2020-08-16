@@ -12,7 +12,13 @@ class ProductSerializer(IntlSerializer):
         self._price = product.price
         self._quantity = product.quantity
         self._upc = product.upc
-        self._init_relation_safely('_product_type', product, 'product_type', product.product_type_id)
+        # When called from ProductTypeSerializer product.product_type causes DetachedInstanceError
+        self._init_relation_safely(
+            '_product_type',
+            product,
+            'product_type',
+            product.product_type_id
+        )
         self._images = product.images
         self._feature_values = product.feature_values
         self._created_on = product.created_on
@@ -36,8 +42,16 @@ class ProductSerializer(IntlSerializer):
 
     def with_serialized_product_type(self):
         from src.serializers.product_type import ProductTypeSerializer
-        self._with_serialized_relation('_product_type', ProductType, ProductTypeSerializer, lambda serializer: serializer.in_language(
-            self._language).only(['id', 'name', 'image', 'category', 'feature_types', 'slug']))
+        self._with_serialized_relation(
+            '_product_type',
+            ProductType,
+            ProductTypeSerializer,
+            lambda serializer: (
+                serializer
+                .in_language(self._language)
+                .only(['id', 'name', 'image', 'category', 'feature_types', 'slug'])
+            )
+        )
         return self
 
     def _serialize_product_type(self):
@@ -48,7 +62,15 @@ class ProductSerializer(IntlSerializer):
 
     def with_serialized_feature_values(self):
         self._with_serialized_relations(
-            '_feature_values', FeatureValue, FeatureValueSerializer, lambda serializer: serializer.in_language(self._language).with_serialized_feature_type())
+            '_feature_values',
+            FeatureValue,
+            FeatureValueSerializer,
+            lambda serializer: (
+                serializer
+                .in_language(self._language)
+                .with_serialized_feature_type()
+            )
+        )
         return self
 
     def _serialize_feature_values(self):

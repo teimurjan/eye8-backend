@@ -1,6 +1,6 @@
 from typing import List
 
-from sqlalchemy import asc, desc, func, orm
+from sqlalchemy import asc, desc, func, orm, dialects
 
 from src.models import (ProductType, ProductTypeDescription, ProductTypeName,
                         ProductTypeShortDescription, Category)
@@ -111,28 +111,21 @@ class ProductTypeRepo(NonDeletableRepo):
         sorting_type: ProductTypeSortingType = ProductTypeSortingType.DEFAULT,
         offset: int = None,
         limit: int = None,
-        join_products: bool = False,
         only_available: bool = False,
         session=None,
     ):
-        q = self.get_non_deleted_query(session=session)
+        q = self.get_non_deleted_query(
+            session=session
+        ).join(ProductType.products)
 
-        if category_ids is not None:
-            q = q.join(ProductType.categories).filter(
-                Category.id.in_(category_ids))
+        q = (
+            q
+            .join(ProductType.categories)
+            .filter(Category.id.in_(category_ids))
+            if category_ids is not None else q
+        )
 
-        if join_products:
-            q = (
-                q
-                .options(orm.joinedload(ProductType.products))
-                .outerjoin(ProductType.products)
-                .group_by(ProductType.id)
-                .group_by(Product.price)
-                .group_by(Product.discount)
-            )
-
-            if only_available:
-                q = q.filter(ProductType.is_available == True)
+        q = q.filter(ProductType.is_available == True) if only_available else q
 
         q = q.order_by(*self._get_order_by_from_sorting_type(sorting_type))
 

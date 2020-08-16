@@ -11,5 +11,6 @@ class ProductTypeShortDescription(IntlText):
         ForeignKey(
             'product_type.id'
         ),
-        nullable=False
+        nullable=False,
+        index=True
     )

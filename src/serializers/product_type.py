@@ -18,7 +18,13 @@ class ProductTypeSerializer(IntlSerializer):
         self._image = product_type.image
         self._categories = product_type.categories
         self._feature_types = product_type.feature_types
-        self._products = None
+        # When called from ProductTypeSerializer product.product_type causes DetachedInstanceError
+        self._init_relation_safely(
+            '_products',
+            product_type,
+            'products',
+            None
+        )
         self._slug = product_type.slug
         self._is_deleted = product_type.is_deleted
         self._created_on = product_type.created_on
@@ -35,7 +41,7 @@ class ProductTypeSerializer(IntlSerializer):
             'image': self._image,
             'categories': self._serialize_categories(),
             'feature_types': self._serialize_feature_types(),
-            'products': self._products,
+            'products': self._serialize_products(),
             'slug': self._slug,
             'is_deleted': self._is_deleted,
             'created_on': self._created_on,
@@ -57,7 +63,11 @@ class ProductTypeSerializer(IntlSerializer):
 
     def with_serialized_categories(self):
         self._with_serialized_relations(
-            '_categories', Category, CategorySerializer, lambda serializer: serializer.in_language(self._language))
+            '_categories',
+            Category,
+            CategorySerializer,
+            lambda serializer: serializer.in_language(self._language)
+        )
 
         return self
 
@@ -66,18 +76,26 @@ class ProductTypeSerializer(IntlSerializer):
 
     def with_serialized_feature_types(self):
         self._with_serialized_relations(
-            '_feature_types', FeatureType, FeatureTypeSerializer, lambda serializer: serializer.in_language(self._language))
+            '_feature_types',
+            FeatureType,
+            FeatureTypeSerializer,
+            lambda serializer: serializer.in_language(self._language)
+        )
 
         return self
 
     def _serialize_feature_types(self):
         return self._serialize_relations('_feature_types', FeatureType)
 
-    def add_products(self, products):
-        self._products = [
-            ProductSerializer(product)
-            .in_language(self._language)
-            .serialize()
-            for product in products
-        ]
+    def _serialize_products(self):
+        return self._serialize_relations('_products', Product)
+
+    def with_serialized_products(self):
+        self._with_serialized_relations(
+            '_products',
+            Product,
+            ProductSerializer,
+            lambda serializer: serializer.in_language(self._language)
+        )
+
         return self

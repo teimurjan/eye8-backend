@@ -60,31 +60,6 @@ class PromoCodeRepo(NonDeletableRepo):
         if count == 0:
             raise self.DoesNotExist()
 
-        q = (
-            q
-            .options(joinedload(PromoCode.products))
-            .outerjoin(PromoCode.products)
-        )
-
-        return q.first()
-
-    @with_session
-    def get_by_id(self, id_, session=None):
-        q = (
-            self
-            .get_non_deleted_query(session=session)
-            .filter(PromoCode.id == id_)
-        )
-        count = q.count()
-        if count == 0:
-            raise self.DoesNotExist()
-
-        q = (
-            q
-            .options(joinedload(PromoCode.products))
-            .outerjoin(PromoCode.products)
-        )
-
         return q.first()
 
     class DoesNotExist(Exception):

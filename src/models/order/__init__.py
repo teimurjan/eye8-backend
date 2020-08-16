@@ -1,6 +1,5 @@
 from sqlalchemy import Table, Column, String, Integer, ForeignKey
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.associationproxy import association_proxy
 
 from src.models.base import NonDeletableModel
 
@@ -26,7 +25,8 @@ class Order(NonDeletableModel):
     items = relationship(
         'OrderItem',
         backref='order',
-        cascade="all, delete, delete-orphan"
+        cascade="all, delete, delete-orphan",
+        lazy="joined"
     )
     # statuses are: idle, approved, rejected, completed
     status = Column(String(60), default='idle', nullable=False)

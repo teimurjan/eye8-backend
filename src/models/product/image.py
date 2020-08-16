@@ -11,5 +11,6 @@ class ProductImage(BaseModel):
         ForeignKey(
             'product.id'
         ),
-        nullable=False
+        nullable=False,
+        index=True
     )

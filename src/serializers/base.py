@@ -9,7 +9,8 @@ class Serializer:
         self._ignore_fields = None
 
     def _init_relation_safely(self, attr_name, obj, relation_name, default=None):
-        setattr(self, attr_name, self._get_relation_safely(obj, relation_name, default))
+        setattr(self, attr_name, self._get_relation_safely(
+            obj, relation_name, default))
 
     def _get_relation_safely(self, obj, relation_name, default=None):
         try:
@@ -58,9 +59,13 @@ class Serializer:
         return getattr(self, attr_name)
 
     def _with_serialized_relations(self, attr_name, model_cls, serializer_cls, before_serialize=None):
+        attr = getattr(self, attr_name)
+        if attr is None:
+            return self
+
         serialized = []
-        for i in getattr(self, attr_name):
-            serializer = serializer_cls(i)
+        for model in attr:
+            serializer = serializer_cls(model)
 
             if before_serialize is not None and callable(before_serialize):
                 before_serialize(serializer)
@@ -74,6 +79,11 @@ class Serializer:
         if getattr(self, attr_name) and isinstance(getattr(self, attr_name)[0], model_cls):
             return [i.id for i in getattr(self, attr_name)]
         return getattr(self, attr_name)
+
+    def chain(self, fn):
+        fn(self)
+
+        return self
 
     @abstractmethod
     def serialize(self):

@@ -3,6 +3,7 @@ from operator import and_
 from sqlalchemy import Column, ForeignKey, Integer, String, Table, orm
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.sql.expression import case, exists, select
+from sqlalchemy.ext.associationproxy import association_proxy
 
 from src.models.base import BaseModel, NonDeletableModel
 from src.models.product import Product
@@ -10,11 +11,21 @@ from src.models.product import Product
 ProductTypeXCategoryTable = Table(
     'product_type_x_category',
     BaseModel.metadata,
-    Column('product_type_id', Integer, ForeignKey(
-        'product_type.id'), primary_key=True),
-    Column('category_id', Integer, ForeignKey(
-        'category.id'), primary_key=True)
+    Column(
+        'product_type_id',
+        Integer,
+        ForeignKey('product_type.id'),
+        primary_key=True,
+        index=True
+    ),
+    Column(
+        'category_id',
+        Integer,
+        ForeignKey('category.id'),
+        primary_key=True
+    )
 )
+
 
 class ProductType(NonDeletableModel):
     __tablename__ = 'product_type'
@@ -46,14 +57,14 @@ class ProductType(NonDeletableModel):
     )
     products = orm.relationship(
         'Product',
-        lazy='select',
+        lazy='joined',
     )
     image = Column(String(255), nullable=True)
     categories = orm.relationship(
         'Category',
         secondary=ProductTypeXCategoryTable,
         lazy='joined',
-        backref=orm.backref('product_types', lazy='joined')
+        backref=orm.backref('product_types')
     )
     slug = Column(String(255), nullable=False, unique=True)
 
@@ -93,5 +104,5 @@ class ProductType(NonDeletableModel):
                 )
                 .label("is_available")
             ])
-            .label('number_of_available_products')
+            .label('is_available')
         )

@@ -4,10 +4,19 @@ from src.models.base import NonDeletableModel, BaseModel
 ProductXPromoCodeTable = Table(
     'product_x_promo_code',
     BaseModel.metadata,
-    Column('product_id', Integer, ForeignKey(
-        'product.id'), primary_key=True),
-    Column('promo_code_id', Integer, ForeignKey(
-        'promo_code.id'), primary_key=True)
+    Column(
+        'product_id',
+        Integer,
+        ForeignKey('product.id'),
+        primary_key=True,
+        index=True
+    ),
+    Column(
+        'promo_code_id',
+        Integer,
+        ForeignKey('promo_code.id'),
+        primary_key=True
+    )
 )
 
 
@@ -22,6 +31,6 @@ class PromoCode(NonDeletableModel):
     products = orm.relationship(
         'Product',
         secondary=ProductXPromoCodeTable,
-        lazy='select',
-        backref=orm.backref('promo_codes')
+        backref=orm.backref('promo_codes'),
+        lazy="selectin"
     )

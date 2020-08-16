@@ -34,15 +34,15 @@ class ProductTypeListView(ValidatableView, PaginatableView):
     def get(self, request):
         product_types = []
         meta = None
-        join_products = request.args.get('products') == '1'
         sorting_type = get_sorting_type_from_request(request)
         only_fields = request.args.getlist('fields')
         only_available = request.args.get('available') == '1'
+        serialize_products = request.args.get('products') == '1'
+        should_get_raw_intl_field = request.args.get('raw_intl') == '1'
 
         pagination_data = self._get_pagination_data(request)
         if pagination_data:
             product_types, count = self._service.get_all(
-                join_products=join_products,
                 only_available=only_available,
                 sorting_type=sorting_type,
                 offset=pagination_data['offset'],
@@ -58,14 +58,12 @@ class ProductTypeListView(ValidatableView, PaginatableView):
                 sorting_type=sorting_type,
             )
 
-        should_get_raw_intl_field = request.args.get('raw_intl') == '1'
-
         serialized_product_types = [
             self
             ._serializer_cls(product_type)
             .in_language(None if should_get_raw_intl_field else request.language)
             .only(request.args.getlist('fields'))
-            .add_products(product_type.products if join_products else [])
+            .chain(lambda s: s.with_serialized_products() if serialize_products else None)
             .serialize()
             for product_type in product_types
         ]

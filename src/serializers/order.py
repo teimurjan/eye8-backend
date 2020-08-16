@@ -16,7 +16,7 @@ class OrderSerializer(IntlSerializer):
         self._user_address = order.user_address
         self._status = order.status
         self._promo_code = order.promo_code
-        self._init_relation_safely('_items', order, 'items')
+        self._items = order.items
         self._created_on = order.created_on
         self._updated_on = order.updated_on
         self._is_deleted = order.is_deleted
@@ -35,7 +35,7 @@ class OrderSerializer(IntlSerializer):
                 'id': self._promo_code.id,
                 'discount': self._promo_code.discount,
                 'amount': self._promo_code.amount,
-                'products': self._serialize_products(),
+                'products': self._serialize_promo_code_products(),
             } if self._promo_code else None,
             'created_on': self._created_on,
             'updated_on': self._updated_on,
@@ -50,7 +50,7 @@ class OrderSerializer(IntlSerializer):
     def _serialize_user(self):
         return self._serialize_relation('_user', User)
 
-    def _serialize_products(self):
+    def _serialize_promo_code_products(self):
         if (self._promo_code and self._get_relation_safely(self._promo_code, 'products')):
             return [product.id for product in self._promo_code.products]
         return None
@@ -76,8 +76,4 @@ class OrderSerializer(IntlSerializer):
         return self
 
     def _serialize_items(self):
-        items = getattr(self, '_items')
-        if items is None:
-            return None
-
-        return list(map(lambda item: item.id if isinstance(item, OrderItem) else item, self._items))
+        return self._serialize_relations('_items', OrderItem)

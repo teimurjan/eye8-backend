@@ -103,14 +103,12 @@ class ProductTypeService:
 
     def get_all(
         self,
-        join_products: bool = False,
         only_available: bool = True,
         sorting_type: ProductTypeSortingType = None,
         offset: int=None,
         limit: int=None,
     ):
         return self._repo.get_all(
-            join_products=join_products,
             only_available=only_available,
             offset=offset,
             limit=limit,
@@ -132,7 +130,6 @@ class ProductTypeService:
                 sorting_type,
                 offset,
                 limit,
-                join_products=True,
                 session=s
             )
             return product_types, count
