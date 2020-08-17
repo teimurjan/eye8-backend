@@ -1,32 +1,33 @@
 from contextlib import contextmanager
-from typing import Generic, TypeVar, List
+from typing import Dict, Iterator, Type, TypeVar, List
 
-from sqlalchemy import func
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.session import Session as SQLAlchemySession
+from sqlalchemy.orm.query import Query as SQLAlchemyQuery
 
-from src.models.intl import Language
+from src.models.intl import IntlText, Language
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def with_session(f):
     def wrapper(self, *args, **kwargs):
-        if kwargs.get('session') is None:
+        if kwargs.get("session") is None:
             with self.session() as s:
-                kwargs['session'] = s
+                kwargs["session"] = s
                 return f(self, *args, **kwargs)
         return f(self, *args, **kwargs)
 
     return wrapper
 
 
-class Repo(Generic[T]):
-    def __init__(self, db_conn, Model: T):
+class Repo:
+    def __init__(self, db_conn, model_cls: Type[T]):
         self.__db_conn = db_conn
-        self._Model = Model
+        self._model_cls = model_cls
 
     @contextmanager
-    def session(self):
+    def session(self) -> Iterator[SQLAlchemySession]:
         Session = sessionmaker(bind=self.__db_conn, expire_on_commit=False)
         session = Session()
         try:
@@ -39,11 +40,11 @@ class Repo(Generic[T]):
             session.close()
 
     @with_session
-    def get_query(self, session=None):
-        return session.query(self._Model)
+    def get_query(self, session: SQLAlchemySession = None) -> SQLAlchemyQuery:
+        return session.query(self._model_cls)
 
     @with_session
-    def get_by_id(self, id_, session) -> T:
+    def get_by_id(self, id_: int, session: SQLAlchemySession) -> T:
         obj = self.get_query(session=session).get(id_)
         if obj is None:
             raise self.DoesNotExist()
@@ -51,19 +52,27 @@ class Repo(Generic[T]):
         return obj
 
     @with_session
-    def get_all(self, offset=None, limit=None, session=None) -> List[T]:
-        return self.get_query(session=session).order_by(self._Model.id).offset(offset).limit(limit).all()
+    def get_all(
+        self, offset: int = None, limit: int = None, session: SQLAlchemySession = None
+    ) -> List[T]:
+        return (
+            self.get_query(session=session)
+            .order_by(self._model_cls.id)
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
 
     @with_session
-    def count_all(self, session=None) -> int:
+    def count_all(self, session: SQLAlchemySession = None) -> int:
         return self.get_query(session=session).count()
 
     @with_session
-    def filter_by_ids(self, ids, session) -> List[T]:
-        return self.get_query(session=session).filter(self._Model.id.in_(ids)).all()
+    def filter_by_ids(self, ids: List[int], session: SQLAlchemySession) -> List[T]:
+        return self.get_query(session=session).filter(self._model_cls.id.in_(ids)).all()
 
     @with_session
-    def delete(self, id_, session) -> None:
+    def delete(self, id_: int, session: SQLAlchemySession) -> None:
         obj = self.get_by_id(id_, session=session)
         return session.delete(obj)
 
@@ -72,30 +81,33 @@ class Repo(Generic[T]):
             raise NotImplementedError
 
 
-class NonDeletableRepo(Repo[T]):
-    def __init__(self, db_conn, Model: T):
-        super().__init__(db_conn, Model)
+class NonDeletableRepo(Repo):
+    def __init__(self, db_conn, model_cls: Type[T]):
+        super().__init__(db_conn, model_cls)
 
     @with_session
-    def delete(self, id_, session):
+    def delete(self, id_: int, session: SQLAlchemySession):
         obj = self.get_by_id(id_, session=session)
         obj.is_deleted = True
         return obj
 
     @with_session
-    def get_deleted_query(self, session=None):
-        return self.get_query(session=session).filter(self._Model.is_deleted == True)
+    def get_deleted_query(self, session: SQLAlchemySession = None):
+        return self.get_query(session=session).filter(
+            self._model_cls.is_deleted == True
+        )
 
     @with_session
-    def get_non_deleted_query(self, session=None):
-        return self.get_query(session=session).filter((self._Model.is_deleted == None) | (self._Model.is_deleted == False))
+    def get_non_deleted_query(self, session: SQLAlchemySession = None):
+        return self.get_query(session=session).filter(
+            (self._model_cls.is_deleted == None) | (self._model_cls.is_deleted == False)
+        )
 
     @with_session
-    def get_by_id(self, id_, session=None):
+    def get_by_id(self, id_: int, session: SQLAlchemySession = None):
         obj = (
-            self
-            .get_non_deleted_query(session=session)
-            .filter(self._Model.id == id_)
+            self.get_non_deleted_query(session=session)
+            .filter(self._model_cls.id == id_)
             .first()
         )
         if obj is None:
@@ -104,25 +116,41 @@ class NonDeletableRepo(Repo[T]):
         return obj
 
     @with_session
-    def get_all(self, offset=None, limit=None, session=None):
-        return self.get_non_deleted_query(session=session).order_by(self._Model.id).offset(offset).limit(limit).all()
+    def get_all(self, offset=None, limit=None, session: SQLAlchemySession = None):
+        return (
+            self.get_non_deleted_query(session=session)
+            .order_by(self._model_cls.id)
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
 
     @with_session
-    def count_all(self, session=None):
+    def count_all(self, session: SQLAlchemySession = None):
         return self.get_non_deleted_query(session=session).count()
 
     @with_session
-    def filter_by_ids(self, ids, session=None):
-        return self.get_non_deleted_query(session=session).filter(self._Model.id.in_(ids)).all()
+    def filter_by_ids(self, ids: List[int], session: SQLAlchemySession = None):
+        return (
+            self.get_non_deleted_query(session=session)
+            .filter(self._model_cls.id.in_(ids))
+            .all()
+        )
 
 
-def set_intl_texts(texts, owner, owner_field_name, IntlTextModel, session):
+def set_intl_texts(
+    texts: Dict,
+    owner: T,
+    owner_field_name: str,
+    intl_text_model_cls: Type[IntlText],
+    session: SQLAlchemySession,
+):
     new_texts = []
     for language_id, value in texts.items():
-        text = IntlTextModel()
+        text = intl_text_model_cls()
         text.value = value
         language = session.query(Language).get(int(language_id))
-        text.language = language
+        setattr(text, "language", language)
         new_texts.append(text)
 
     setattr(owner, owner_field_name, new_texts)

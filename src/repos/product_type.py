@@ -1,11 +1,19 @@
-from typing import List
+from fileinput import FileInput
+from typing import Dict, List
 
-from sqlalchemy import asc, desc, func, orm, dialects
+from sqlalchemy import asc, desc
+from sqlalchemy.orm.session import Session as SQLAlchemySession
 
-from src.models import (ProductType, ProductTypeDescription, ProductTypeName,
-                        ProductTypeShortDescription, Category)
-from src.models.product import Product
-from src.models.product_type.instagram_link import ProductTypeInstagramLink
+from src.models import (
+    ProductType,
+    ProductTypeDescription,
+    ProductTypeName,
+    ProductTypeShortDescription,
+    Category,
+    Product,
+    ProductTypeInstagramLink,
+    FeatureType,
+)
 from src.repos.base import NonDeletableRepo, set_intl_texts, with_session
 from src.storage.base import Storage
 from src.utils.slug import generate_slug
@@ -29,24 +37,33 @@ class ProductTypeRepo(NonDeletableRepo):
     @with_session
     def add_product_type(
         self,
-        names,
-        descriptions,
-        short_descriptions,
-        instagram_links,
-        image,
-        categories,
-        feature_types,
-        session
+        names: Dict,
+        descriptions: Dict,
+        short_descriptions: Dict,
+        instagram_links: List[str],
+        image: FileInput,
+        categories: List[Category],
+        feature_types: List[FeatureType],
+        session: SQLAlchemySession,
     ):
         product_type = ProductType()
 
-        set_intl_texts(names, product_type, 'names',
-                       ProductTypeName, session=session)
+        set_intl_texts(names, product_type, "names", ProductTypeName, session=session)
         product_type.slug = self.get_unique_slug(product_type, session=session)
-        set_intl_texts(descriptions, product_type,
-                       'descriptions', ProductTypeDescription, session=session)
-        set_intl_texts(short_descriptions, product_type,
-                       'short_descriptions', ProductTypeShortDescription, session=session)
+        set_intl_texts(
+            descriptions,
+            product_type,
+            "descriptions",
+            ProductTypeDescription,
+            session=session,
+        )
+        set_intl_texts(
+            short_descriptions,
+            product_type,
+            "short_descriptions",
+            ProductTypeShortDescription,
+            session=session,
+        )
 
         set_instagram_links(product_type, instagram_links)
 
@@ -67,24 +84,33 @@ class ProductTypeRepo(NonDeletableRepo):
     @with_session
     def update_product_type(
         self,
-        id_,
-        names,
-        descriptions,
-        short_descriptions,
-        instagram_links,
-        image,
-        categories,
-        feature_types,
-        session
+        id_: int,
+        names: Dict,
+        descriptions: Dict,
+        short_descriptions: Dict,
+        instagram_links: List[str],
+        image: FileInput,
+        categories: List[Category],
+        feature_types: List[FeatureType],
+        session: SQLAlchemySession,
     ):
         product_type = self.get_by_id(id_, session=session)
 
-        set_intl_texts(names, product_type, 'names',
-                       ProductTypeName, session=session)
+        set_intl_texts(names, product_type, "names", ProductTypeName, session=session)
         set_intl_texts(
-            descriptions, product_type, 'descriptions', ProductTypeDescription, session=session)
-        set_intl_texts(short_descriptions, product_type,
-                       'short_descriptions', ProductTypeShortDescription, session=session)
+            descriptions,
+            product_type,
+            "descriptions",
+            ProductTypeDescription,
+            session=session,
+        )
+        set_intl_texts(
+            short_descriptions,
+            product_type,
+            "short_descriptions",
+            ProductTypeShortDescription,
+            session=session,
+        )
 
         set_instagram_links(product_type, instagram_links)
 
@@ -93,9 +119,11 @@ class ProductTypeRepo(NonDeletableRepo):
         product_type.categories = categories
 
         if image is not None:
-            product_type.image = (image
-                                  if isinstance(image, str)
-                                  else self.__file_storage.save_file(image))
+            product_type.image = (
+                image
+                if isinstance(image, str)
+                else self.__file_storage.save_file(image)
+            )
 
         session.flush()
 
@@ -112,17 +140,14 @@ class ProductTypeRepo(NonDeletableRepo):
         offset: int = None,
         limit: int = None,
         only_available: bool = False,
-        session=None,
+        session: SQLAlchemySession = None,
     ):
-        q = self.get_non_deleted_query(
-            session=session
-        ).join(ProductType.products)
+        q = self.get_non_deleted_query(session=session).join(ProductType.products)
 
         q = (
-            q
-            .join(ProductType.categories)
-            .filter(Category.id.in_(category_ids))
-            if category_ids is not None else q
+            q.join(ProductType.categories).filter(Category.id.in_(category_ids))
+            if category_ids is not None
+            else q
         )
 
         q = q.filter(ProductType.is_available == True) if only_available else q
@@ -142,19 +167,31 @@ class ProductTypeRepo(NonDeletableRepo):
         return [ProductType.id]
 
     @with_session
-    def has_with_category(self, id_, session):
-        return self.get_non_deleted_query(session=session).join(ProductType.categories).filter(Category.id.in_([id_])).count() > 0
+    def has_with_category(self, id_: int, session: SQLAlchemySession):
+        return (
+            self.get_non_deleted_query(session=session)
+            .join(ProductType.categories)
+            .filter(Category.id.in_([id_]))
+            .count()
+            > 0
+        )
 
     @with_session
-    def is_slug_used(self, slug, session):
-        return self.get_query(session=session).filter(ProductType.slug == slug).count() > 0
+    def is_slug_used(self, slug: str, session: SQLAlchemySession):
+        return (
+            self.get_query(session=session).filter(ProductType.slug == slug).count() > 0
+        )
 
     @with_session
-    def get_by_slug(self, slug, session):
-        return self.get_non_deleted_query(session=session).filter(ProductType.slug == slug).first()
+    def get_by_slug(self, slug: str, session: SQLAlchemySession):
+        return (
+            self.get_non_deleted_query(session=session)
+            .filter(ProductType.slug == slug)
+            .first()
+        )
 
     @with_session
-    def get_unique_slug(self, product_type, session):
+    def get_unique_slug(self, product_type: ProductType, session: SQLAlchemySession):
         generated_slug = generate_slug(product_type)
         if generated_slug == product_type.slug:
             return generated_slug

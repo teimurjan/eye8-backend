@@ -19,12 +19,7 @@ class ProductTypeSerializer(IntlSerializer):
         self._categories = product_type.categories
         self._feature_types = product_type.feature_types
         # When called from ProductTypeSerializer product.product_type causes DetachedInstanceError
-        self._init_relation_safely(
-            '_products',
-            product_type,
-            'products',
-            None
-        )
+        self._init_relation_safely("_products", product_type, "products", None)
         self._slug = product_type.slug
         self._is_deleted = product_type.is_deleted
         self._created_on = product_type.created_on
@@ -32,22 +27,24 @@ class ProductTypeSerializer(IntlSerializer):
         self._is_deleted = product_type.is_deleted
 
     def serialize(self):
-        return self._filter_fields({
-            'id': self._id,
-            'name': self._serialize_name(),
-            'description': self._serialize_description(),
-            'short_description': self._serialize_short_description(),
-            'instagram_links': self._serialize_instagram_links(),
-            'image': self._image,
-            'categories': self._serialize_categories(),
-            'feature_types': self._serialize_feature_types(),
-            'products': self._serialize_products(),
-            'slug': self._slug,
-            'is_deleted': self._is_deleted,
-            'created_on': self._created_on,
-            'updated_on': self._updated_on,
-            'is_deleted': self._is_deleted,
-        })
+        return self._filter_fields(
+            {
+                "id": self._id,
+                "name": self._serialize_name(),
+                "description": self._serialize_description(),
+                "short_description": self._serialize_short_description(),
+                "instagram_links": self._serialize_instagram_links(),
+                "image": self._image,
+                "categories": self._serialize_categories(),
+                "feature_types": self._serialize_feature_types(),
+                "products": self._serialize_products(),
+                "slug": self._slug,
+                "is_deleted": self._is_deleted,
+                "created_on": self._created_on,
+                "updated_on": self._updated_on,
+                "is_deleted": self._is_deleted,
+            }
+        )
 
     def _serialize_name(self):
         return self._get_intl_field_from(self._names)
@@ -59,43 +56,43 @@ class ProductTypeSerializer(IntlSerializer):
         return self._get_intl_field_from(self._short_descriptions)
 
     def _serialize_instagram_links(self):
-        return [{'id': instagram_link.id, 'link': instagram_link.link} for instagram_link in self._instagram_links]
+        return [
+            {"id": instagram_link.id, "link": instagram_link.link}
+            for instagram_link in self._instagram_links
+        ]
 
     def with_serialized_categories(self):
         self._with_serialized_relations(
-            '_categories',
-            Category,
+            "_categories",
             CategorySerializer,
-            lambda serializer: serializer.in_language(self._language)
+            lambda serializer: serializer.in_language(self._language),
         )
 
         return self
 
     def _serialize_categories(self):
-        return self._serialize_relations('_categories', Category)
+        return self._serialize_relations("_categories", Category)
 
     def with_serialized_feature_types(self):
         self._with_serialized_relations(
-            '_feature_types',
-            FeatureType,
+            "_feature_types",
             FeatureTypeSerializer,
-            lambda serializer: serializer.in_language(self._language)
+            lambda serializer: serializer.in_language(self._language),
         )
 
         return self
 
     def _serialize_feature_types(self):
-        return self._serialize_relations('_feature_types', FeatureType)
+        return self._serialize_relations("_feature_types", FeatureType)
 
     def _serialize_products(self):
-        return self._serialize_relations('_products', Product)
+        return self._serialize_relations("_products", Product)
 
     def with_serialized_products(self):
         self._with_serialized_relations(
-            '_products',
-            Product,
+            "_products",
             ProductSerializer,
-            lambda serializer: serializer.in_language(self._language)
+            lambda serializer: serializer.in_language(self._language),
         )
 
         return self

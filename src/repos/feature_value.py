@@ -1,5 +1,8 @@
+from src.models.feature_type import FeatureType
+from typing import Dict
+from sqlalchemy.orm.session import Session as SQLAlchemySession
 from src.repos.base import Repo, with_session, set_intl_texts
-from src.models import FeatureValue, FeatureValueName, FeatureType
+from src.models import FeatureValue, FeatureValueName
 
 
 class FeatureValueRepo(Repo):
@@ -7,11 +10,12 @@ class FeatureValueRepo(Repo):
         super().__init__(db_conn, FeatureValue)
 
     @with_session
-    def add_feature_value(self, names, feature_type, session):
+    def add_feature_value(
+        self, names: Dict, feature_type: FeatureType, session: SQLAlchemySession
+    ):
         feature_value = FeatureValue()
 
-        set_intl_texts(names, feature_value, 'names',
-                       FeatureValueName, session=session)
+        set_intl_texts(names, feature_value, "names", FeatureValueName, session=session)
 
         feature_value.feature_type_id = feature_type.id
 
@@ -26,11 +30,16 @@ class FeatureValueRepo(Repo):
         return feature_value
 
     @with_session
-    def update_feature_value(self, id_, names, feature_type, session):
+    def update_feature_value(
+        self,
+        id_: int,
+        names: Dict,
+        feature_type: FeatureType,
+        session: SQLAlchemySession,
+    ):
         feature_value = self.get_by_id(id_, session=session)
 
-        set_intl_texts(names, feature_value, 'names',
-                       FeatureValueName, session=session)
+        set_intl_texts(names, feature_value, "names", FeatureValueName, session=session)
 
         feature_value.feature_type_id = feature_type.id
 

@@ -15,19 +15,21 @@ class UserSerializer(Serializer):
         self._is_deleted = user.is_deleted
 
     def serialize(self):
-        return self._filter_fields({
-            'id': self._id,
-            'email': self._email,
-            'name': self._name,
-            'group': self._serialize_group(),
-            'created_on': self._created_on,
-            'updated_on': self._updated_on,
-            'is_deleted': self._is_deleted,
-        })
+        return self._filter_fields(
+            {
+                "id": self._id,
+                "email": self._email,
+                "name": self._name,
+                "group": self._serialize_group(),
+                "created_on": self._created_on,
+                "updated_on": self._updated_on,
+                "is_deleted": self._is_deleted,
+            }
+        )
 
     def with_serialized_group(self):
-        self._with_serialized_relation('_group', Group, GroupSerializer)
+        self._with_serialized_relation("_group", Group, GroupSerializer)
         return self
 
     def _serialize_group(self):
-        return self._group.id if isinstance(self._group, Group) else self._group,
+        return (self._group.id if isinstance(self._group, Group) else self._group,)

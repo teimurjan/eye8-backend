@@ -20,13 +20,14 @@ class BannerRepo(Repo):
         text_left_offset,
         text_right_offset,
         text_bottom_offset,
-        session
+        session,
     ):
         banner = Banner()
 
-        set_intl_texts(texts, banner, 'texts', BannerText, session=session)
-        set_intl_texts(link_texts, banner, 'link_texts',
-                       BannerLinkText, session=session)
+        set_intl_texts(texts, banner, "texts", BannerText, session=session)
+        set_intl_texts(
+            link_texts, banner, "link_texts", BannerLinkText, session=session
+        )
 
         banner.link = link
         banner.text_color = text_color
@@ -59,13 +60,14 @@ class BannerRepo(Repo):
         text_left_offset,
         text_right_offset,
         text_bottom_offset,
-        session
+        session,
     ):
         banner = self.get_by_id(id_, session=session)
 
-        set_intl_texts(texts, banner, 'texts', BannerText, session=session)
-        set_intl_texts(link_texts, banner, 'link_texts',
-                       BannerLinkText, session=session)
+        set_intl_texts(texts, banner, "texts", BannerText, session=session)
+        set_intl_texts(
+            link_texts, banner, "link_texts", BannerLinkText, session=session
+        )
 
         banner.link = link
         banner.text_color = text_color
@@ -75,9 +77,11 @@ class BannerRepo(Repo):
         banner.text_bottom_offset = text_bottom_offset
 
         if image is not None:
-            banner.image = (image
-                            if isinstance(image, str)
-                            else self.__file_storage.save_file(image))
+            banner.image = (
+                image
+                if isinstance(image, str)
+                else self.__file_storage.save_file(image)
+            )
 
         session.flush()
 

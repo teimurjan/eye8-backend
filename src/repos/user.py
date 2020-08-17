@@ -1,3 +1,5 @@
+from sqlalchemy.orm.session import Session as SQLAlchemySession
+
 from src.repos.base import NonDeletableRepo, with_session
 from src.models import User
 
@@ -7,15 +9,22 @@ class UserRepo(NonDeletableRepo):
         super().__init__(db_conn, User)
 
     @with_session
-    def get_first_by_email(self, email, session):
+    def get_first_by_email(self, email: str, session: SQLAlchemySession):
         return self.get_query(session=session).filter(User.email == email).first()
 
     @with_session
-    def is_email_used(self, email, session):
-        return self.get_non_deleted_query(session=session).filter(User.email == email).count() > 0
-    
+    def is_email_used(self, email: str, session: SQLAlchemySession):
+        return (
+            self.get_non_deleted_query(session=session)
+            .filter(User.email == email)
+            .count()
+            > 0
+        )
+
     @with_session
-    def create_user(self, name, email, password, session):
+    def create_user(
+        self, name: str, email: str, password: str, session: SQLAlchemySession
+    ):
         user = User()
         user.name = name
         user.email = email

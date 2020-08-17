@@ -1,3 +1,4 @@
+from src.utils.request import Request
 from cerberus.validator import Validator
 
 from src.constants.status_codes import OK_CODE
@@ -11,7 +12,7 @@ class RegistrationView(ValidatableView):
         super().__init__(validator)
         self._signup_service = signup_service
 
-    def post(self, request):
+    def post(self, request: Request):
         try:
             data = request.get_json()
             self._validate(data)
@@ -20,4 +21,4 @@ class RegistrationView(ValidatableView):
 
             return {}, OK_CODE
         except self._signup_service.SameEmail:
-            raise InvalidEntityFormat({'email': 'errors.same'})
+            raise InvalidEntityFormat({"email": "errors.same"})

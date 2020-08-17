@@ -1,6 +1,7 @@
 {
-  "python.pythonPath": "./virtualenv/bin/python",
-  "python.linting.pylintEnabled": true,
-  "python.linting.enabled": true,
-  "python.linting.pylintArgs": ["--load-plugins", "pylint-flask"]
+  "python.formatting.provider": "black",
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportUnusedImport": "warning"
+  }
 }

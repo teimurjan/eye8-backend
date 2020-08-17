@@ -19,20 +19,22 @@ class BannerSerializer(IntlSerializer):
         self._updated_on = banner.updated_on
 
     def serialize(self):
-        return self._filter_fields({
-            'id': self._id,
-            'text': self._serialize_text(),
-            'link_text': self._serialize_link_text(),
-            'link': self._link,
-            'text_color': self._text_color,
-            'image': self._image,
-            'text_top_offset': self._text_top_offset,
-            'text_left_offset': self._text_left_offset,
-            'text_right_offset': self._text_right_offset,
-            'text_bottom_offset': self._text_bottom_offset,
-            'created_on': self._created_on,
-            'updated_on': self._updated_on,
-        })
+        return self._filter_fields(
+            {
+                "id": self._id,
+                "text": self._serialize_text(),
+                "link_text": self._serialize_link_text(),
+                "link": self._link,
+                "text_color": self._text_color,
+                "image": self._image,
+                "text_top_offset": self._text_top_offset,
+                "text_left_offset": self._text_left_offset,
+                "text_right_offset": self._text_right_offset,
+                "text_bottom_offset": self._text_bottom_offset,
+                "created_on": self._created_on,
+                "updated_on": self._updated_on,
+            }
+        )
 
     def _serialize_text(self):
         return self._get_intl_field_from(self._texts)

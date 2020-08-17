@@ -1,5 +1,9 @@
+from fileinput import FileInput
+from typing import List, Optional, Union, cast
+from sqlalchemy.orm.session import Session as SQLAlchemySession
+
 from src.storage.base import Storage
-from src.models import ProductImage, Product
+from src.models import ProductImage, Product, ProductType, FeatureValue
 from src.repos.base import NonDeletableRepo, with_session
 
 
@@ -11,14 +15,14 @@ class ProductRepo(NonDeletableRepo):
     @with_session
     def add_product(
         self,
-        price,
-        discount,
-        quantity,
-        upc,
-        images,
-        product_type,
-        feature_values,
-        session
+        price: int,
+        discount: int,
+        quantity: int,
+        upc: Optional[str],
+        images: List[FileInput],
+        product_type: ProductType,
+        feature_values: List[FeatureValue],
+        session: SQLAlchemySession,
     ):
         product = Product()
 
@@ -46,15 +50,15 @@ class ProductRepo(NonDeletableRepo):
     @with_session
     def update_product(
         self,
-        id_,
-        price,
-        discount,
-        quantity,
-        upc,
-        images,
-        product_type,
-        feature_values,
-        session
+        id_: int,
+        price: int,
+        discount: int,
+        quantity: int,
+        upc: Optional[str],
+        images: List[Union[FileInput, str]],
+        product_type: ProductType,
+        feature_values: List[FeatureValue],
+        session: SQLAlchemySession,
     ):
         product = self.get_by_id(id_, session=session)
 
@@ -68,14 +72,18 @@ class ProductRepo(NonDeletableRepo):
         new_images = []
         for image in images:
             if type(image) == str:
-                new_images.append([
-                    product_image
-                    for product_image in product.images
-                    if product_image.image == image
-                ][0])
+                new_images.append(
+                    [
+                        product_image
+                        for product_image in product.images
+                        if product_image.image == image
+                    ][0]
+                )
             else:
                 product_image = ProductImage()
-                product_image.image = self.__file_storage.save_file(image)
+                product_image.image = self.__file_storage.save_file(
+                    cast(FileInput, image)
+                )
                 new_images.append(product_image)
         product.images = new_images
 
@@ -87,18 +95,24 @@ class ProductRepo(NonDeletableRepo):
         return product
 
     @with_session
-    def has_with_product_type(self, product_type_id, session):
-        return self.get_non_deleted_query(session=session).filter(Product.product_type_id == product_type_id).count() > 0
+    def has_with_product_type(self, product_type_id: int, session: SQLAlchemySession):
+        return (
+            self.get_non_deleted_query(session=session)
+            .filter(Product.product_type_id == product_type_id)
+            .count()
+            > 0
+        )
 
     @with_session
-    def get_first_by_upc(self, upc, session):
+    def get_first_by_upc(self, upc: str, session: SQLAlchemySession):
         return self.get_query(session=session).filter(Product.upc == upc).first()
 
     @with_session
-    def get_for_product_type(self, product_type_id, session=None):
+    def get_for_product_type(
+        self, product_type_id: int, session: SQLAlchemySession = None
+    ):
         return (
-            self
-            .get_query(session=session)
+            self.get_query(session=session)
             .filter(Product.product_type_id == product_type_id)
             .order_by(Product.quantity.desc(), Product.id)
             .all()

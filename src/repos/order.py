@@ -1,13 +1,11 @@
-from itertools import groupby
-from operator import itemgetter
+from datetime import datetime
+from typing import Any, Dict, List
 
-import bcrypt
-from sqlalchemy import desc, select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm.session import Session as SQLAlchemySession
+from sqlalchemy.sql.expression import desc
 
-from src.models import Order, OrderItem, PromoCode, Product, ProductType, ProductTypeName
+from src.models import Order, OrderItem, User, PromoCode
 from src.repos.base import NonDeletableRepo, with_session
-from src.utils.array import find_in_array
 
 
 class OrderRepo(NonDeletableRepo):
@@ -15,29 +13,22 @@ class OrderRepo(NonDeletableRepo):
         super().__init__(db_conn, Order)
 
     @with_session
-    def get_for_user(self, user_id, offset=None, limit=None, session=None):
-        q = (
-            self
-            .get_non_deleted_query(session=session)
-            .filter(Order.user_id == user_id)
-        )
-        orders = (
-            q
-            .order_by(desc(Order.id))
-            .offset(offset)
-            .limit(limit)
-            .all()
-        )
+    def get_for_user(
+        self,
+        user_id: int,
+        offset: int = None,
+        limit: int = None,
+        session: SQLAlchemySession = None,
+    ):
+        q = self.get_non_deleted_query(session=session).filter(Order.user_id == user_id)
+        orders = q.order_by(desc(Order.id)).offset(offset).limit(limit).all()
 
         return orders, q.count()
 
     @with_session
-    def get_by_id(self, id_, session) -> Order:
+    def get_by_id(self, id_: int, session: SQLAlchemySession) -> Order:
         orders = (
-            self
-            .get_non_deleted_query(session=session)
-            .filter(Order.id == id_)
-            .all()
+            self.get_non_deleted_query(session=session).filter(Order.id == id_).all()
         )
         if len(orders) == 0:
             raise self.DoesNotExist()
@@ -45,7 +36,16 @@ class OrderRepo(NonDeletableRepo):
         return orders[0]
 
     @with_session
-    def add_order(self, user, user_name, user_phone_number, user_address, items, promo_code, session):
+    def add_order(
+        self,
+        user: User,
+        user_name: str,
+        user_phone_number: str,
+        user_address: str,
+        items: List[Dict[str, Any]],
+        promo_code: PromoCode,
+        session: SQLAlchemySession,
+    ):
         order = Order()
         order.user = user
         order.user_name = user_name
@@ -56,10 +56,10 @@ class OrderRepo(NonDeletableRepo):
         order_items = []
         for item in items:
             order_item = OrderItem()
-            order_item.product = item['product']
-            order_item.product_price_per_item = item['product'].price
-            order_item.product_discount = item['product'].discount
-            order_item.quantity = item['quantity']
+            order_item.product = item["product"]
+            order_item.product_price_per_item = item["product"].price
+            order_item.product_discount = item["product"].discount
+            order_item.quantity = item["quantity"]
             order_items.append(order_item)
 
         order.items = order_items
@@ -73,7 +73,17 @@ class OrderRepo(NonDeletableRepo):
         return order
 
     @with_session
-    def update_order(self, id_, user_name, user_phone_number, user_address, items, status, promo_code, session):
+    def update_order(
+        self,
+        id_: int,
+        user_name: str,
+        user_phone_number: str,
+        user_address: str,
+        items: List[Dict[str, Any]],
+        status: str,
+        promo_code: PromoCode,
+        session: SQLAlchemySession,
+    ):
         order = self.get_by_id(id_, session=session)
         order.user_name = user_name
         order.user_phone_number = user_phone_number
@@ -84,10 +94,10 @@ class OrderRepo(NonDeletableRepo):
         new_order_items = []
         for item in items:
             order_item = OrderItem()
-            order_item.product = item['product']
-            order_item.product_price_per_item = item['product'].price
-            order_item.product_discount = item['product'].discount
-            order_item.quantity = item['quantity']
+            order_item.product = item["product"]
+            order_item.product_price_per_item = item["product"].price
+            order_item.product_discount = item["product"].discount
+            order_item.quantity = item["quantity"]
             new_order_items.append(order_item)
 
         order.items = new_order_items
@@ -100,11 +110,14 @@ class OrderRepo(NonDeletableRepo):
         return order
 
     @with_session
-    def has_for_date_range(self, start_date, end_date=None, session=None):
-        q = (
-            self
-            .get_non_deleted_query(session=session)
-            .filter(Order.created_on >= start_date)
+    def has_for_date_range(
+        self,
+        start_date: datetime,
+        end_date: datetime = None,
+        session: SQLAlchemySession = None,
+    ):
+        q = self.get_non_deleted_query(session=session).filter(
+            Order.created_on >= start_date
         )
 
         if end_date is not None:
@@ -113,11 +126,11 @@ class OrderRepo(NonDeletableRepo):
         return q.count() > 0
 
     @with_session
-    def has_with_promo_code(self, promo_code_id, session=None):
-        q = (
-            self
-            .get_non_deleted_query(session=session)
-            .filter(Order.promo_code_id == promo_code_id)
+    def has_with_promo_code(
+        self, promo_code_id: int, session: SQLAlchemySession = None
+    ):
+        q = self.get_non_deleted_query(session=session).filter(
+            Order.promo_code_id == promo_code_id
         )
 
         return q.count() > 0

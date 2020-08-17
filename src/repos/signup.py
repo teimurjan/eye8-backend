@@ -1,14 +1,13 @@
 import bcrypt
 
+from sqlalchemy.orm.session import Session as SQLAlchemySession
+
 from src.repos.base import Repo, with_session
 from src.models import Signup
 
 
 def encrypt_password(password):
-    return bcrypt.hashpw(
-        password.encode(),
-        bcrypt.gensalt()
-    ).decode('utf-8')
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode("utf-8")
 
 
 class SignupRepo(Repo):
@@ -16,15 +15,22 @@ class SignupRepo(Repo):
         super().__init__(db_conn, Signup)
 
     @with_session
-    def get_first_by_email(self, email, session):
-        return self.get_query(session=session).filter(Signup.user_email == email).first()
+    def get_first_by_email(self, email: str, session: SQLAlchemySession):
+        return (
+            self.get_query(session=session).filter(Signup.user_email == email).first()
+        )
 
     @with_session
-    def is_email_used(self, email, session):
-        return self.get_query(session=session).filter(Signup.emuser_ail == email).count() > 0
+    def is_email_used(self, email: str, session: SQLAlchemySession):
+        return (
+            self.get_query(session=session).filter(Signup.emuser_ail == email).count()
+            > 0
+        )
 
     @with_session
-    def create_signup(self, name, email, password, session):
+    def create_signup(
+        self, name: str, email: str, password: str, session: SQLAlchemySession
+    ):
         signup = Signup()
         signup.user_name = name
         signup.user_email = email
@@ -36,7 +42,9 @@ class SignupRepo(Repo):
         return signup
 
     @with_session
-    def update_signup(self, signup_id, name, password, session):
+    def update_signup(
+        self, signup_id: int, name: str, password: str, session: SQLAlchemySession
+    ):
         signup = self.get_by_id(signup_id, session=session)
         signup.user_name = name
         signup.user_password = encrypt_password(password)
