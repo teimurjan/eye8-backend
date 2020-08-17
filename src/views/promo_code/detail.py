@@ -55,10 +55,10 @@ class PromoCodeDetailView(ValidatableView):
 
     def delete(self, request: Request, promo_code_id: int):
         try:
-            instantly = request.args.get("instantly") == "1"
+            forever = request.args.get("forever") == "1"
 
-            if instantly:
-                self._service.delete_instantly(promo_code_id, user=request.user)
+            if forever:
+                self._service.delete_forever(promo_code_id, user=request.user)
             else:
                 self._service.delete(promo_code_id, user=request.user)
 

@@ -78,13 +78,13 @@ class PromoCodeService:
             raise self.PromoCodeNotFound()
 
     @allow_roles(["admin", "manager"])
-    def delete_instantly(self, id_, *args, **kwargs):
+    def delete_forever(self, id_, *args, **kwargs):
         try:
             with self._repo.session() as s:
                 if self._order_repo.has_with_promo_code(id_, session=s):
                     raise self.PromoCodeWithOrdersIsUntouchable()
 
-                return self._repo.delete_instantly(id_, session=s)
+                return self._repo.delete_forever(id_, session=s)
         except self._repo.DoesNotExist:
             raise self.PromoCodeNotFound()
 

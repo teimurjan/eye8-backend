@@ -92,7 +92,7 @@ class NonDeletableRepo(Repo):
         return obj
 
     @with_session
-    def delete_instantly(self, id_: int, session: SQLAlchemySession):
+    def delete_forever(self, id_: int, session: SQLAlchemySession):
         obj = self.get_by_id(id_, deleted=True, session=session)
         session.delete(obj)
 
