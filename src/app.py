@@ -657,10 +657,6 @@ class App:
 
             return Response(xml, mimetype='text/xml')
 
-        @self.flask_app.route('/debug-sentry')
-        def trigger_error():
-            division_by_zero = 1 / 0
-
     def __init_limiter(self):
         limiter = Limiter(
             self.flask_app,

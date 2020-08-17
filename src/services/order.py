@@ -3,11 +3,8 @@ from flask import render_template
 
 from src.errors import InvalidEntityFormat
 from src.mail import Mail
-from src.policies.feature_values import FeatureValuesPolicy
-from src.repos.feature_value import FeatureValueRepo
 from src.repos.order import OrderRepo
 from src.repos.product import ProductRepo
-from src.repos.product_type import ProductTypeRepo
 from src.repos.promo_code import PromoCodeRepo
 from src.services.decorators import allow_roles
 

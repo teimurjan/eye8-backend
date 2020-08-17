@@ -1,3 +1,4 @@
+from typing import Type
 from src.utils.request import Request
 from src.constants.status_codes import NOT_FOUND_CODE, OK_CODE
 from src.errors import InvalidEntityFormat
@@ -7,7 +8,7 @@ from src.services.currency_rate import CurrencyRateService
 
 class CurrencyRateDetailView:
     def __init__(
-        self, service: CurrencyRateService, serializer_cls: CurrencyRateSerializer
+        self, service: CurrencyRateService, serializer_cls: Type[CurrencyRateSerializer]
     ):
         self._service = service
         self._serializer_cls = serializer_cls
