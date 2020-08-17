@@ -22,7 +22,8 @@ class PromoCodeListView(ValidatableView):
         self._serializer_cls = serializer_cls
 
     def get(self, request: Request):
-        promo_codes, _ = self._service.get_all(user=request.user)
+        deleted = request.args.get("deleted") == "1"
+        promo_codes, _ = self._service.get_all(deleted=deleted, user=request.user)
 
         serialized_promo_codes = [
             self._serializer_cls(promo_code).in_language(request.language).serialize()

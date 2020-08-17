@@ -92,6 +92,11 @@ class NonDeletableRepo(Repo):
         return obj
 
     @with_session
+    def delete_instantly(self, id_: int, session: SQLAlchemySession):
+        obj = self.get_by_id(id_, deleted=True, session=session)
+        session.delete(obj)
+
+    @with_session
     def get_deleted_query(self, session: SQLAlchemySession = None):
         return self.get_query(session=session).filter(
             self._model_cls.is_deleted == True
@@ -104,26 +109,30 @@ class NonDeletableRepo(Repo):
         )
 
     @with_session
-    def get_by_id(self, id_: int, session: SQLAlchemySession = None):
-        obj = (
-            self.get_non_deleted_query(session=session)
-            .filter(self._model_cls.id == id_)
-            .first()
+    def get_by_id(self, id_: int, deleted=False, session: SQLAlchemySession = None):
+        q = (
+            self.get_deleted_query(session=session)
+            if deleted
+            else self.get_non_deleted_query(session=session)
         )
+
+        obj = q.filter(self._model_cls.id == id_).first()
         if obj is None:
             raise self.DoesNotExist()
 
         return obj
 
     @with_session
-    def get_all(self, offset=None, limit=None, session: SQLAlchemySession = None):
-        return (
-            self.get_non_deleted_query(session=session)
-            .order_by(self._model_cls.id)
-            .offset(offset)
-            .limit(limit)
-            .all()
+    def get_all(
+        self, offset=None, limit=None, deleted=False, session: SQLAlchemySession = None
+    ):
+        q = (
+            self.get_deleted_query(session=session)
+            if deleted
+            else self.get_non_deleted_query(session=session)
         )
+
+        return q.order_by(self._model_cls.id).offset(offset).limit(limit).all()
 
     @with_session
     def count_all(self, session: SQLAlchemySession = None):

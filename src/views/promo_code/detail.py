@@ -23,7 +23,8 @@ class PromoCodeDetailView(ValidatableView):
 
     def get(self, request: Request, promo_code_id: int):
         try:
-            promo_code = self._service.get_one(promo_code_id)
+            deleted = request.args.get("deleted") == "1"
+            promo_code = self._service.get_one(promo_code_id, deleted=deleted)
             serialized_promo_code = (
                 self._serializer_cls(promo_code)
                 .in_language(request.language)
@@ -54,7 +55,13 @@ class PromoCodeDetailView(ValidatableView):
 
     def delete(self, request: Request, promo_code_id: int):
         try:
-            self._service.delete(promo_code_id, user=request.user)
+            instantly = request.args.get("instantly") == "1"
+
+            if instantly:
+                self._service.delete_instantly(promo_code_id, user=request.user)
+            else:
+                self._service.delete(promo_code_id, user=request.user)
+
             return {}, OK_CODE
         except self._service.PromoCodeWithOrdersIsUntouchable:
             raise InvalidEntityFormat({"orders": "errors.hasOrders"})
@@ -63,7 +70,8 @@ class PromoCodeDetailView(ValidatableView):
 
     def head(self, request: Request, promo_code_id: int):
         try:
-            self._service.get_one(promo_code_id)
+            deleted = request.args.get("deleted") == "1"
+            self._service.get_one(promo_code_id, deleted=deleted)
             return {}, OK_CODE
         except self._service.PromoCodeNotFound:
             return {}, NOT_FOUND_CODE
