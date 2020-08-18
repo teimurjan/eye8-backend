@@ -1,17 +1,20 @@
+from src.validation_rules.category.update import (
+    UpdateCategoryData,
+    UpdateCategoryDataValidator,
+)
 from src.utils.request import Request
 from typing import Type
 from src.serializers.category import CategorySerializer
 from src.services.category import CategoryService
-from cerberus.validator import Validator
 from src.views.base import ValidatableView
 from src.errors import InvalidEntityFormat
 from src.constants.status_codes import NOT_FOUND_CODE, OK_CODE
 
 
-class CategoryDetailView(ValidatableView):
+class CategoryDetailView(ValidatableView[UpdateCategoryData]):
     def __init__(
         self,
-        validator: Validator,
+        validator: UpdateCategoryDataValidator,
         service: CategoryService,
         serializer_cls: Type[CategorySerializer],
     ):
@@ -34,9 +37,8 @@ class CategoryDetailView(ValidatableView):
 
     def put(self, request: Request, category_id: int):
         try:
-            data = request.get_json()
-            self._validate(data)
-            category = self._service.update(category_id, data, user=request.user)
+            valid_data = self._validate(request.get_json())
+            category = self._service.update(category_id, valid_data, user=request.user)
             serialized_category = self._serializer_cls(category).serialize()
             return {"data": serialized_category}, OK_CODE
         except self._service.CategoryNotFound:

@@ -1,3 +1,7 @@
+from src.validation_rules.currency_rate.create import (
+    CreateCurrencyRateData,
+    CreateCurrencyRateDataValidator,
+)
 from src.utils.request import Request
 from typing import Type
 from src.constants.status_codes import OK_CODE, UNPROCESSABLE_ENTITY_CODE
@@ -6,10 +10,10 @@ from src.services.currency_rate import CurrencyRateService
 from src.views.base import ValidatableView
 
 
-class CurrencyRateListView(ValidatableView):
+class CurrencyRateListView(ValidatableView[CreateCurrencyRateData]):
     def __init__(
         self,
-        validator,
+        validator: CreateCurrencyRateDataValidator,
         service: CurrencyRateService,
         serializer_cls: Type[CurrencyRateSerializer],
     ):
@@ -29,12 +33,9 @@ class CurrencyRateListView(ValidatableView):
 
     def post(self, request: Request):
         try:
-            data = request.get_json()
-            self._validate(data)
-
-            currency_rate = self._service.create(data, user=request.user)
+            valid_data = self._validate(request.get_json())
+            currency_rate = self._service.create(valid_data, user=request.user)
             serialized_currency_rate = self._serializer_cls(currency_rate).serialize()
-
             return {"data": serialized_currency_rate, "meta": None}, OK_CODE
         except self._service.AdditionLimitExceeded:
             return {"limit": "errors.limitExceeded"}, UNPROCESSABLE_ENTITY_CODE

@@ -1,17 +1,20 @@
+from src.validation_rules.banner.update import (
+    UpdateBannerData,
+    UpdateBannerDataValidator,
+)
 from src.utils.request import Request
 from typing import Type
 from src.serializers.banner import BannerSerializer
 from src.services.banner import BannerService
-from cerberus.validator import Validator
 from src.constants.status_codes import NOT_FOUND_CODE, OK_CODE
 from src.utils.json import parse_json_from_form_data
 from src.views.base import ValidatableView
 
 
-class BannerDetailView(ValidatableView):
+class BannerDetailView(ValidatableView[UpdateBannerData]):
     def __init__(
         self,
-        validator: Validator,
+        validator: UpdateBannerDataValidator,
         service: BannerService,
         serializer_cls: Type[BannerSerializer],
     ):
@@ -38,9 +41,8 @@ class BannerDetailView(ValidatableView):
                 **parse_json_from_form_data(request.form),
                 "image": request.files.get("image") or request.form.get("image"),
             }
-
-            self._validate(data)
-            banner = self._service.update(banner_id, data, user=request.user)
+            valid_data = self._validate(data)
+            banner = self._service.update(banner_id, valid_data, user=request.user)
             serialized_banner = self._serializer_cls(banner).serialize()
             return {"data": serialized_banner}, OK_CODE
         except self._service.BannerNotFound:

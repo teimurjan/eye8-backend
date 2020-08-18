@@ -1,7 +1,7 @@
+from src.validation_rules.order.create import CreateOrderData, CreateOrderDataValidator
 from src.utils.request import Request
 from typing import Type
 
-from cerberus.validator import Validator
 from src.constants.status_codes import OK_CODE
 from src.errors import InvalidEntityFormat
 from src.serializers.order import OrderSerializer
@@ -9,10 +9,10 @@ from src.services.order import OrderService
 from src.views.base import PaginatableView, ValidatableView
 
 
-class OrderListView(ValidatableView, PaginatableView):
+class OrderListView(ValidatableView[CreateOrderData], PaginatableView):
     def __init__(
         self,
-        validator: Validator,
+        validator: CreateOrderDataValidator,
         service: OrderService,
         serializer_cls: Type[OrderSerializer],
     ):
@@ -46,9 +46,8 @@ class OrderListView(ValidatableView, PaginatableView):
 
     def post(self, request: Request):
         try:
-            data = request.get_json()
-            self._validate(data)
-            order = self._service.create(data, request.user)
+            valid_data = self._validate(request.get_json())
+            order = self._service.create(valid_data, request.user)
             serialized_product = (
                 self._serializer_cls(order).with_serialized_user().serialize()
             )

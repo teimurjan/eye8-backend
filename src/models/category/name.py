@@ -3,13 +3,7 @@ from src.models.intl import IntlText
 
 
 class CategoryName(IntlText):
-    __tablename__ = 'category_name'
+    __tablename__ = "category_name"
 
     value = Column(String(50), nullable=False)
-    category_id = Column(
-        Integer,
-        ForeignKey(
-            'category.id'
-        ),
-        nullable=False
-    )
+    category_id = Column(Integer, ForeignKey("category.id"), nullable=False)

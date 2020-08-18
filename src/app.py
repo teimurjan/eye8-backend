@@ -1,10 +1,8 @@
-
 import os
 
 import sqlalchemy as db
-from cerberus.validator import Validator
 from elasticsearch import Elasticsearch
-from flask import Flask, Response, jsonify, request, send_from_directory
+from flask import Flask, Response, request, send_from_directory
 from flask.templating import render_template
 from flask_caching import Cache
 from flask_cors import CORS
@@ -14,7 +12,6 @@ from flask_mail import Mail as FlaskMail
 
 from paths import APP_ROOT_PATH
 from src.abstract_view import AbstractView
-from src.constants.status_codes import OK_CODE
 from src.mail import Mail
 from src.middleware.http.authorize import AuthorizeHttpMiddleware
 from src.middleware.http.language import LanguageHttpMiddleware
@@ -56,39 +53,27 @@ from src.services.user import UserService
 from src.storage.aws_storage import AWSStorage
 from src.utils.cache import response_filter
 from src.cache.category_product_types import CategoryProductTypesCache
-from src.validation_rules.authentication import AUTHENTICATION_VALIDATION_RULES
-from src.validation_rules.banner.create import CREATE_BANNER_VALIDATION_RULES
-from src.validation_rules.banner.update import UPDATE_BANNER_VALIDATION_RULES
-from src.validation_rules.category.create import \
-    CREATE_CATEGORY_VALIDATION_RULES
-from src.validation_rules.category.update import \
-    UPDATE_CATEGORY_VALIDATION_RULES
-from src.validation_rules.confirm_registration import \
-    CONFIRM_REGISTRATION_VALIDATION_RULES
-from src.validation_rules.currency_rate.create import \
-    CREATE_CURRENCY_RATE_VALIDATION_RULES
-from src.validation_rules.feature_type.create import \
-    CREATE_FEATURE_TYPE_VALIDATION_RULES
-from src.validation_rules.feature_type.update import \
-    UPDATE_FEATURE_TYPE_VALIDATION_RULES
-from src.validation_rules.feature_value.create import \
-    CREATE_FEATURE_VALUE_VALIDATION_RULES
-from src.validation_rules.feature_value.update import \
-    UPDATE_FEATURE_VALUE_VALIDATION_RULES
-from src.validation_rules.order.create import CREATE_ORDER_VALIDATION_RULES
-from src.validation_rules.order.update import UPDATE_ORDER_VALIDATION_RULES
-from src.validation_rules.product.create import CREATE_PRODUCT_VALIDATION_RULES
-from src.validation_rules.product.update import UPDATE_PRODUCT_VALIDATION_RULES
-from src.validation_rules.product_type.create import \
-    CREATE_PRODUCT_TYPE_VALIDATION_RULES
-from src.validation_rules.product_type.update import \
-    UPDATE_PRODUCT_TYPE_VALIDATION_RULES
-from src.validation_rules.promo_code.create import \
-    CREATE_PROMO_CODE_VALIDATION_RULES
-from src.validation_rules.promo_code.update import \
-    UPDATE_PROMO_CODE_VALIDATION_RULES
-from src.validation_rules.refresh_token import REFRESH_TOKEN_VALIDATION_RULES
-from src.validation_rules.registration import REGISTRATION_VALIDATION_RULES
+from src.validation_rules.authentication import AuthenticationDataValidator
+from src.validation_rules.banner.create import CreateBannerDataValidator
+from src.validation_rules.banner.update import UpdateBannerDataValidator
+from src.validation_rules.category.create import CreateCategoryDataValidator
+from src.validation_rules.category.update import UpdateCategoryDataValidator
+from src.validation_rules.confirm_registration import ConfirmRegistrationDataValidator
+from src.validation_rules.currency_rate.create import CreateCurrencyRateDataValidator
+from src.validation_rules.feature_type.create import CreateFeatureTypeDataValidator
+from src.validation_rules.feature_type.update import UpdateFeatureTypeDataValidator
+from src.validation_rules.feature_value.create import CreateFeatureValueDataValidator
+from src.validation_rules.feature_value.update import UpdateFeatureValueDataValidator
+from src.validation_rules.order.create import CreateOrderDataValidator
+from src.validation_rules.order.update import UpdateOrderDataValidator
+from src.validation_rules.product.create import CreateProductDataValidator
+from src.validation_rules.product.update import UpdateProductDataValidator
+from src.validation_rules.product_type.create import CreateProductTypeDataValidator
+from src.validation_rules.product_type.update import UpdateProductTypeDataValidator
+from src.validation_rules.promo_code.create import CreatePromoCodeDataValidator
+from src.validation_rules.promo_code.update import UpdatePromoCodeDataValidator
+from src.validation_rules.refresh_token import RefreshTokenDataValidator
+from src.validation_rules.registration import RegistrationDataValidator
 from src.views.authentication import AuthenticationView
 from src.views.banner.detail import BannerDetailView
 from src.views.banner.list import BannerListView
@@ -128,9 +113,9 @@ class App:
         self.flask_app = Flask(__name__)
         self.__init_config()
 
-        if self.flask_app.config.get('SENTRY_DSN') is not None:
+        if self.flask_app.config.get("SENTRY_DSN") is not None:
             sentry_sdk.init(
-                dsn=self.flask_app.config['SENTRY_DSN'],
+                dsn=self.flask_app.config["SENTRY_DSN"],
                 integrations=[FlaskIntegration()],
             )
 
@@ -140,10 +125,10 @@ class App:
         self.__init_limiter()
         self.__init_file_storage()
 
-        engine = db.create_engine(self.flask_app.config['DB_URL'], echo=True)
+        engine = db.create_engine(self.flask_app.config["DB_URL"], echo=True)
         self.__db_conn = engine.connect()
 
-        self.__es = Elasticsearch(self.flask_app.config['ELASTICSEARCH_URL'])
+        self.__es = Elasticsearch(self.flask_app.config["ELASTICSEARCH_URL"])
 
         self.__init_repos()
         self.__init_services()
@@ -157,8 +142,7 @@ class App:
         self.__feature_type_repo = FeatureTypeRepo(self.__db_conn)
         self.__feature_value_repo = FeatureValueRepo(self.__db_conn)
         self.__language_repo = LanguageRepo(self.__db_conn)
-        self.__product_type_repo = ProductTypeRepo(
-            self.__db_conn, self.__file_storage)
+        self.__product_type_repo = ProductTypeRepo(self.__db_conn, self.__file_storage)
         self.__product_repo = ProductRepo(self.__db_conn, self.__file_storage)
         self.__user_repo = UserRepo(self.__db_conn)
         self.__banner_repo = BannerRepo(self.__db_conn, self.__file_storage)
@@ -169,26 +153,35 @@ class App:
 
     def __init_services(self):
         self.__category_service = CategoryService(
-            self.__category_repo, self.__product_type_repo, self.__es)
-        self.__feature_type_service = FeatureTypeService(
-            self.__feature_type_repo)
+            self.__category_repo, self.__product_type_repo, self.__es
+        )
+        self.__feature_type_service = FeatureTypeService(self.__feature_type_repo)
         self.__feature_value_service = FeatureValueService(
             self.__feature_value_repo, self.__feature_type_repo
         )
         self.__language_service = LanguageService(self.__language_repo)
         self.__product_type_service = ProductTypeService(
-            self.__product_type_repo, self.__category_repo, self.__feature_type_repo, self.__product_repo, self.__es
+            self.__product_type_repo,
+            self.__category_repo,
+            self.__feature_type_repo,
+            self.__product_repo,
+            self.__es,
         )
         feature_values_policy = FeatureValuesPolicy(self.__feature_type_repo)
         self.__product_service = ProductService(
-            self.__product_repo, self.__product_type_repo, self.__feature_value_repo, feature_values_policy
+            self.__product_repo,
+            self.__product_type_repo,
+            self.__feature_value_repo,
+            feature_values_policy,
         )
         self.__user_service = UserService(self.__user_repo)
         self.__banner_service = BannerService(self.__banner_repo)
         self.__signup_service = SignupService(
-            self.__signup_repo, self.__user_repo, self.mail)
+            self.__signup_repo, self.__user_repo, self.mail
+        )
         self.__order_service = OrderService(
-            self.__order_repo, self.__product_repo, self.__promo_code_repo, self.mail)
+            self.__order_repo, self.__product_repo, self.__promo_code_repo, self.mail
+        )
         self.__promo_code_service = PromoCodeService(
             self.__promo_code_repo, self.__product_repo, self.__order_repo
         )
@@ -201,16 +194,16 @@ class App:
 
     def __init_product_type_search(self):
         if self.__is_search_initialized(index="product_type"):
-            self.__es.indices.delete('product_type')
-        self.__es.indices.create(index='product_type')
+            self.__es.indices.delete("product_type")
+        self.__es.indices.create(index="product_type")
         product_types, _ = self.__product_type_repo.get_all()
         for product_type in product_types:
             self.__product_type_service.set_to_search_index(product_type)
 
     def __init_category_search(self):
         if self.__is_search_initialized(index="category"):
-            self.__es.indices.delete('category')
-        self.__es.indices.create(index='category')
+            self.__es.indices.delete("category")
+        self.__es.indices.create(index="category")
         for category in self.__category_repo.get_all():
             self.__category_service.set_to_search_index(category)
 
@@ -220,460 +213,442 @@ class App:
 
     def __init_api_routes(self):
         re_init_category_search_middleware = ReInitMiddleware(
-            lambda: self.__is_search_initialized('category'),
-            self.__init_category_search
+            lambda: self.__is_search_initialized("category"),
+            self.__init_category_search,
         )
         re_init_product_type_search_middleware = ReInitMiddleware(
-            lambda: self.__is_search_initialized('product_type'),
-            self.__init_product_type_search
+            lambda: self.__is_search_initialized("product_type"),
+            self.__init_product_type_search,
         )
         authorize_middleware = AuthorizeHttpMiddleware(self.__user_service)
         language_middleware = LanguageHttpMiddleware(self.__language_repo)
-        middlewares = [
-            authorize_middleware,
-            language_middleware
-        ]
+        middlewares = [authorize_middleware, language_middleware]
 
         category_product_types_cache = CategoryProductTypesCache(self.cache)
 
         self.flask_app.add_url_rule(
-            '/api/auth/login',
+            "/api/auth/login",
             view_func=AbstractView.as_view(
-                'login',
+                "login",
                 concrete_view=AuthenticationView(
-                    self.__user_service, Validator(
-                        AUTHENTICATION_VALIDATION_RULES)
+                    self.__user_service, AuthenticationDataValidator()
                 ),
-                middlewares=[language_middleware]
+                middlewares=[language_middleware],
             ),
-            methods=['POST']
+            methods=["POST"],
         )
         self.flask_app.add_url_rule(
-            '/api/auth/register',
+            "/api/auth/register",
             view_func=AbstractView.as_view(
-                'register',
+                "register",
                 concrete_view=RegistrationView(
-                    self.__signup_service,
-                    Validator(REGISTRATION_VALIDATION_RULES)
+                    self.__signup_service, RegistrationDataValidator()
                 ),
-                middlewares=[language_middleware]
+                middlewares=[language_middleware],
             ),
-            methods=['POST']
+            methods=["POST"],
         )
         self.flask_app.add_url_rule(
-            '/api/auth/register/confirm',
+            "/api/auth/register/confirm",
             view_func=AbstractView.as_view(
-                'register_confirm',
+                "register_confirm",
                 concrete_view=ConfirmRegistrationView(
-                    self.__signup_service,
-                    Validator(CONFIRM_REGISTRATION_VALIDATION_RULES)
+                    self.__signup_service, ConfirmRegistrationDataValidator(),
                 ),
-                middlewares=[language_middleware]
+                middlewares=[language_middleware],
             ),
-            methods=['POST']
+            methods=["POST"],
         )
         self.flask_app.add_url_rule(
-            '/api/auth/refresh',
+            "/api/auth/refresh",
             view_func=AbstractView.as_view(
-                'refresh_token',
+                "refresh_token",
                 concrete_view=RefreshTokenView(
-                    self.__user_service,
-                    Validator(REFRESH_TOKEN_VALIDATION_RULES)
+                    self.__user_service, RefreshTokenDataValidator()
                 ),
-                middlewares=[language_middleware]
+                middlewares=[language_middleware],
             ),
-            methods=['POST']
-
+            methods=["POST"],
         )
         self.flask_app.add_url_rule(
-            '/api/categories',
+            "/api/categories",
             view_func=AbstractView.as_view(
-                'categories',
+                "categories",
                 concrete_view=CategoryListView(
-                    Validator(CREATE_CATEGORY_VALIDATION_RULES),
+                    CreateCategoryDataValidator(),
                     self.__category_service,
-                    CategorySerializer
+                    CategorySerializer,
                 ),
                 middlewares=middlewares,
                 on_respond=category_product_types_cache.get_invalidate_hook(),
             ),
-            methods=['GET', 'POST']
+            methods=["GET", "POST"],
         )
         self.flask_app.add_url_rule(
-            '/api/categories/<int:category_id>',
+            "/api/categories/<int:category_id>",
             view_func=AbstractView.as_view(
-                'category',
+                "category",
                 concrete_view=CategoryDetailView(
-                    Validator(UPDATE_CATEGORY_VALIDATION_RULES),
+                    UpdateCategoryDataValidator(),
                     self.__category_service,
-                    CategorySerializer
+                    CategorySerializer,
                 ),
                 middlewares=middlewares,
                 on_respond=category_product_types_cache.get_invalidate_hook(),
             ),
-            methods=['GET', 'PUT', 'DELETE']
+            methods=["GET", "PUT", "DELETE"],
         )
         self.flask_app.add_url_rule(
-            '/api/categories/<path:slug>',
+            "/api/categories/<path:slug>",
             view_func=AbstractView.as_view(
-                'category_slug',
+                "category_slug",
                 concrete_view=CategorySlugView(
                     self.__category_service, CategorySerializer
                 ),
-                middlewares=middlewares
+                middlewares=middlewares,
             ),
-            methods=['GET']
+            methods=["GET"],
         )
         self.flask_app.add_url_rule(
-            '/api/categories/<path:category_slug>/product_types',
+            "/api/categories/<path:category_slug>/product_types",
             view_func=self.cache.cached(
-                60*60,
+                60 * 60,
                 response_filter=response_filter,
-                make_cache_key=category_product_types_cache.make_cache_key
+                make_cache_key=category_product_types_cache.make_cache_key,
             )(
                 AbstractView.as_view(
-                    'category_product_types',
+                    "category_product_types",
                     concrete_view=ProductTypeByCategoryView(
-                        self.__product_type_service,
-                        ProductTypeSerializer
-                    ),
-                    middlewares=middlewares
-                )
-            ),
-            methods=['GET']
-        )
-        self.flask_app.add_url_rule(
-            '/api/search/<path:query>',
-            view_func=AbstractView.as_view(
-                'search',
-                concrete_view=SearchView(
-                    self.__category_service,
-                    self.__product_type_service,
-                    CategorySerializer,
-                    ProductTypeSerializer
-                ),
-                middlewares=[
-                    *middlewares,
-                    re_init_product_type_search_middleware,
-                    re_init_category_search_middleware
-                ]
-            ),
-            methods=['GET']
-        )
-        self.flask_app.add_url_rule(
-            '/api/feature_types',
-            view_func=AbstractView.as_view(
-                'feature_types',
-                concrete_view=FeatureTypeListView(
-                    Validator(CREATE_FEATURE_TYPE_VALIDATION_RULES),
-                    self.__feature_type_service,
-                    FeatureTypeSerializer
-                ),
-                middlewares=middlewares
-            ),
-            methods=['GET', 'POST']
-        ),
-        self.flask_app.add_url_rule(
-            '/api/feature_types/<int:feature_type_id>',
-            view_func=AbstractView.as_view(
-                'feature_type',
-                concrete_view=FeatureTypeDetailView(
-                    Validator(UPDATE_FEATURE_TYPE_VALIDATION_RULES),
-                    self.__feature_type_service,
-                    FeatureTypeSerializer
-                ),
-                middlewares=middlewares
-            ),
-            methods=['GET', 'PUT', 'DELETE']
-        )
-        self.flask_app.add_url_rule(
-            '/api/feature_values',
-            view_func=AbstractView.as_view(
-                'feature_values',
-                concrete_view=FeatureValueListView(
-                    Validator(CREATE_FEATURE_VALUE_VALIDATION_RULES),
-                    self.__feature_value_service,
-                    FeatureValueSerializer
-                ),
-                middlewares=middlewares
-            ),
-            methods=['GET', 'POST']
-        )
-        self.flask_app.add_url_rule(
-            '/api/feature_values/<int:feature_value_id>',
-            view_func=AbstractView.as_view(
-                'feature_value',
-                concrete_view=FeatureValueDetailView(
-                    Validator(UPDATE_FEATURE_VALUE_VALIDATION_RULES),
-                    self.__feature_value_service,
-                    FeatureValueSerializer),
-                middlewares=middlewares
-            ),
-            methods=['GET', 'PUT', 'DELETE']
-        )
-        self.flask_app.add_url_rule(
-            '/api/products',
-            view_func=AbstractView.as_view(
-                'products',
-                concrete_view=ProductListView(
-                    Validator(CREATE_PRODUCT_VALIDATION_RULES),
-                    self.__product_service,
-                    ProductSerializer
-                ),
-                middlewares=middlewares
-            ),
-            methods=['GET', 'POST']
-        )
-        self.flask_app.add_url_rule(
-            '/api/products/<int:product_id>',
-            view_func=AbstractView.as_view(
-                'product',
-                concrete_view=ProductDetailView(
-                    Validator(UPDATE_PRODUCT_VALIDATION_RULES),
-                    self.__product_service,
-                    ProductSerializer),
-                middlewares=middlewares
-            ),
-            methods=['GET', 'PUT', 'DELETE']
-        )
-        self.flask_app.add_url_rule(
-            '/api/product_types/<path:slug>',
-            view_func=AbstractView.as_view(
-                'product_type_slug',
-                concrete_view=ProductTypeSlugView(
-                    self.__product_type_service, ProductTypeSerializer
-                ),
-                middlewares=middlewares
-            ),
-            methods=['GET']
-        )
-        self.flask_app.add_url_rule(
-            '/api/product_types/<int:product_type_id>/products',
-            view_func=AbstractView.as_view(
-                'product_type_products',
-                concrete_view=ProductByProductTypeView(
-                    self.__product_service, ProductSerializer),
-                middlewares=middlewares
-            ),
-            methods=['GET']
-        )
-        self.flask_app.add_url_rule(
-            '/api/product_types',
-            view_func=AbstractView.as_view(
-                'product_types',
-                concrete_view=ProductTypeListView(
-                    Validator(CREATE_PRODUCT_TYPE_VALIDATION_RULES),
-                    self.__product_type_service,
-                    ProductTypeSerializer
-                ),
-                middlewares=middlewares,
-                on_respond=category_product_types_cache.get_invalidate_hook()
-            ),
-            methods=['GET', 'POST']
-        )
-        self.flask_app.add_url_rule(
-            '/api/product_types/<int:product_type_id>',
-            view_func=AbstractView.as_view(
-                'product_type',
-                concrete_view=ProductTypeDetailView(
-                    Validator(UPDATE_PRODUCT_TYPE_VALIDATION_RULES),
-                    self.__product_type_service,
-                    ProductTypeSerializer
-                ),
-                middlewares=middlewares,
-                on_respond=category_product_types_cache.get_invalidate_hook()
-            ),
-            methods=['GET', 'PUT', 'DELETE']
-        )
-        self.flask_app.add_url_rule(
-            '/api/languages',
-            view_func=self.cache.cached(60 * 60 * 24, response_filter=response_filter)(
-                AbstractView.as_view(
-                    'languages',
-                    concrete_view=LanguageListView(
-                        self.__language_service,
-                        LanguageSerializer
-                    ),
-                    middlewares=middlewares
-                )
-            ),
-            methods=['GET']
-        )
-        self.flask_app.add_url_rule(
-            '/api/banners',
-            view_func=AbstractView.as_view(
-                'banners',
-                concrete_view=BannerListView(
-                    Validator(CREATE_BANNER_VALIDATION_RULES),
-                    self.__banner_service,
-                    BannerSerializer
-                ),
-                middlewares=middlewares
-            ),
-            methods=['GET', 'POST']
-        )
-        self.flask_app.add_url_rule(
-            '/api/banners/<int:banner_id>',
-            view_func=AbstractView.as_view(
-                'banner',
-                concrete_view=BannerDetailView(
-                    Validator(UPDATE_BANNER_VALIDATION_RULES),
-                    self.__banner_service,
-                    BannerSerializer
-                ),
-                middlewares=middlewares
-            ),
-            methods=['GET', 'PUT', 'DELETE']
-        )
-        self.flask_app.add_url_rule(
-            '/api/orders/<int:order_id>',
-            view_func=AbstractView.as_view(
-                'order',
-                concrete_view=OrderDetailView(
-                    Validator(UPDATE_ORDER_VALIDATION_RULES),
-                    self.__order_service,
-                    OrderSerializer
-                ),
-                middlewares=middlewares,
-            ),
-            methods=['GET', 'PUT', 'DELETE']
-        )
-        self.flask_app.add_url_rule(
-            '/api/orders',
-            view_func=AbstractView.as_view(
-                'orders',
-                concrete_view=OrderListView(
-                    Validator(CREATE_ORDER_VALIDATION_RULES),
-                    self.__order_service,
-                    OrderSerializer
-                ),
-                middlewares=middlewares,
-            ),
-            methods=['GET', 'POST']
-        )
-        self.flask_app.add_url_rule(
-            '/api/users/<int:user_id>/orders',
-            view_func=(
-                AbstractView.as_view(
-                    'user_orders',
-                    concrete_view=OrderByUserView(
-                        self.__order_service,
-                        OrderSerializer
+                        self.__product_type_service, ProductTypeSerializer
                     ),
                     middlewares=middlewares,
                 )
             ),
-            methods=['GET', 'POST']
+            methods=["GET"],
         )
         self.flask_app.add_url_rule(
-            '/api/promo_codes/<int:promo_code_id>',
+            "/api/search/<path:query>",
             view_func=AbstractView.as_view(
-                'promo_code',
+                "search",
+                concrete_view=SearchView(
+                    self.__category_service,
+                    self.__product_type_service,
+                    CategorySerializer,
+                    ProductTypeSerializer,
+                ),
+                middlewares=[
+                    *middlewares,
+                    re_init_product_type_search_middleware,
+                    re_init_category_search_middleware,
+                ],
+            ),
+            methods=["GET"],
+        )
+        self.flask_app.add_url_rule(
+            "/api/feature_types",
+            view_func=AbstractView.as_view(
+                "feature_types",
+                concrete_view=FeatureTypeListView(
+                    CreateFeatureTypeDataValidator(),
+                    self.__feature_type_service,
+                    FeatureTypeSerializer,
+                ),
+                middlewares=middlewares,
+            ),
+            methods=["GET", "POST"],
+        ),
+        self.flask_app.add_url_rule(
+            "/api/feature_types/<int:feature_type_id>",
+            view_func=AbstractView.as_view(
+                "feature_type",
+                concrete_view=FeatureTypeDetailView(
+                    UpdateFeatureTypeDataValidator(),
+                    self.__feature_type_service,
+                    FeatureTypeSerializer,
+                ),
+                middlewares=middlewares,
+            ),
+            methods=["GET", "PUT", "DELETE"],
+        )
+        self.flask_app.add_url_rule(
+            "/api/feature_values",
+            view_func=AbstractView.as_view(
+                "feature_values",
+                concrete_view=FeatureValueListView(
+                    CreateFeatureValueDataValidator(),
+                    self.__feature_value_service,
+                    FeatureValueSerializer,
+                ),
+                middlewares=middlewares,
+            ),
+            methods=["GET", "POST"],
+        )
+        self.flask_app.add_url_rule(
+            "/api/feature_values/<int:feature_value_id>",
+            view_func=AbstractView.as_view(
+                "feature_value",
+                concrete_view=FeatureValueDetailView(
+                    UpdateFeatureValueDataValidator(),
+                    self.__feature_value_service,
+                    FeatureValueSerializer,
+                ),
+                middlewares=middlewares,
+            ),
+            methods=["GET", "PUT", "DELETE"],
+        )
+        self.flask_app.add_url_rule(
+            "/api/products",
+            view_func=AbstractView.as_view(
+                "products",
+                concrete_view=ProductListView(
+                    CreateProductDataValidator(),
+                    self.__product_service,
+                    ProductSerializer,
+                ),
+                middlewares=middlewares,
+            ),
+            methods=["GET", "POST"],
+        )
+        self.flask_app.add_url_rule(
+            "/api/products/<int:product_id>",
+            view_func=AbstractView.as_view(
+                "product",
+                concrete_view=ProductDetailView(
+                    UpdateProductDataValidator(),
+                    self.__product_service,
+                    ProductSerializer,
+                ),
+                middlewares=middlewares,
+            ),
+            methods=["GET", "PUT", "DELETE"],
+        )
+        self.flask_app.add_url_rule(
+            "/api/product_types/<path:slug>",
+            view_func=AbstractView.as_view(
+                "product_type_slug",
+                concrete_view=ProductTypeSlugView(
+                    self.__product_type_service, ProductTypeSerializer
+                ),
+                middlewares=middlewares,
+            ),
+            methods=["GET"],
+        )
+        self.flask_app.add_url_rule(
+            "/api/product_types/<int:product_type_id>/products",
+            view_func=AbstractView.as_view(
+                "product_type_products",
+                concrete_view=ProductByProductTypeView(
+                    self.__product_service, ProductSerializer
+                ),
+                middlewares=middlewares,
+            ),
+            methods=["GET"],
+        )
+        self.flask_app.add_url_rule(
+            "/api/product_types",
+            view_func=AbstractView.as_view(
+                "product_types",
+                concrete_view=ProductTypeListView(
+                    CreateProductTypeDataValidator(),
+                    self.__product_type_service,
+                    ProductTypeSerializer,
+                ),
+                middlewares=middlewares,
+                on_respond=category_product_types_cache.get_invalidate_hook(),
+            ),
+            methods=["GET", "POST"],
+        )
+        self.flask_app.add_url_rule(
+            "/api/product_types/<int:product_type_id>",
+            view_func=AbstractView.as_view(
+                "product_type",
+                concrete_view=ProductTypeDetailView(
+                    UpdateProductTypeDataValidator(),
+                    self.__product_type_service,
+                    ProductTypeSerializer,
+                ),
+                middlewares=middlewares,
+                on_respond=category_product_types_cache.get_invalidate_hook(),
+            ),
+            methods=["GET", "PUT", "DELETE"],
+        )
+        self.flask_app.add_url_rule(
+            "/api/languages",
+            view_func=self.cache.cached(60 * 60 * 24, response_filter=response_filter)(
+                AbstractView.as_view(
+                    "languages",
+                    concrete_view=LanguageListView(
+                        self.__language_service, LanguageSerializer
+                    ),
+                    middlewares=middlewares,
+                )
+            ),
+            methods=["GET"],
+        )
+        self.flask_app.add_url_rule(
+            "/api/banners",
+            view_func=AbstractView.as_view(
+                "banners",
+                concrete_view=BannerListView(
+                    CreateBannerDataValidator(), self.__banner_service, BannerSerializer
+                ),
+                middlewares=middlewares,
+            ),
+            methods=["GET", "POST"],
+        )
+        self.flask_app.add_url_rule(
+            "/api/banners/<int:banner_id>",
+            view_func=AbstractView.as_view(
+                "banner",
+                concrete_view=BannerDetailView(
+                    UpdateBannerDataValidator(),
+                    self.__banner_service,
+                    BannerSerializer,
+                ),
+                middlewares=middlewares,
+            ),
+            methods=["GET", "PUT", "DELETE"],
+        )
+        self.flask_app.add_url_rule(
+            "/api/orders/<int:order_id>",
+            view_func=AbstractView.as_view(
+                "order",
+                concrete_view=OrderDetailView(
+                    UpdateOrderDataValidator(), self.__order_service, OrderSerializer,
+                ),
+                middlewares=middlewares,
+            ),
+            methods=["GET", "PUT", "DELETE"],
+        )
+        self.flask_app.add_url_rule(
+            "/api/orders",
+            view_func=AbstractView.as_view(
+                "orders",
+                concrete_view=OrderListView(
+                    CreateOrderDataValidator(), self.__order_service, OrderSerializer,
+                ),
+                middlewares=middlewares,
+            ),
+            methods=["GET", "POST"],
+        )
+        self.flask_app.add_url_rule(
+            "/api/users/<int:user_id>/orders",
+            view_func=(
+                AbstractView.as_view(
+                    "user_orders",
+                    concrete_view=OrderByUserView(
+                        self.__order_service, OrderSerializer
+                    ),
+                    middlewares=middlewares,
+                )
+            ),
+            methods=["GET", "POST"],
+        )
+        self.flask_app.add_url_rule(
+            "/api/promo_codes/<int:promo_code_id>",
+            view_func=AbstractView.as_view(
+                "promo_code",
                 concrete_view=PromoCodeDetailView(
-                    Validator(UPDATE_PROMO_CODE_VALIDATION_RULES),
+                    UpdatePromoCodeDataValidator(),
                     self.__promo_code_service,
-                    PromoCodeSerializer
+                    PromoCodeSerializer,
                 ),
-                middlewares=middlewares
+                middlewares=middlewares,
             ),
-            methods=['GET', 'PUT', 'DELETE']
+            methods=["GET", "PUT", "DELETE"],
         )
         self.flask_app.add_url_rule(
-            '/api/promo_codes',
+            "/api/promo_codes",
             view_func=AbstractView.as_view(
-                'promo_codes',
+                "promo_codes",
                 concrete_view=PromoCodeListView(
-                    Validator(CREATE_PROMO_CODE_VALIDATION_RULES),
+                    CreatePromoCodeDataValidator(),
                     self.__promo_code_service,
-                    PromoCodeSerializer
+                    PromoCodeSerializer,
                 ),
-                middlewares=middlewares
+                middlewares=middlewares,
             ),
-            methods=['GET', 'POST']
+            methods=["GET", "POST"],
         )
         self.flask_app.add_url_rule(
-            '/api/promo_codes/<path:value>',
+            "/api/promo_codes/<path:value>",
             view_func=AbstractView.as_view(
-                'promo_code_value',
+                "promo_code_value",
                 concrete_view=PromoCodeValueView(
-                    self.__promo_code_service,
-                    PromoCodeSerializer
+                    self.__promo_code_service, PromoCodeSerializer
                 ),
-                middlewares=middlewares
+                middlewares=middlewares,
             ),
-            methods=['GET']
+            methods=["GET"],
         )
         self.flask_app.add_url_rule(
-            '/api/currency_rates',
+            "/api/currency_rates",
             view_func=AbstractView.as_view(
-                'currency_rates',
+                "currency_rates",
                 concrete_view=CurrencyRateListView(
-                    Validator(CREATE_CURRENCY_RATE_VALIDATION_RULES),
+                    CreateCurrencyRateDataValidator(),
                     self.__currency_rate_service,
-                    CurrencyRateSerializer
+                    CurrencyRateSerializer,
                 ),
-                middlewares=middlewares
+                middlewares=middlewares,
             ),
-            methods=['GET', 'POST']
+            methods=["GET", "POST"],
         )
         self.flask_app.add_url_rule(
-            '/api/currency_rates/<int:currency_rate_id>',
+            "/api/currency_rates/<int:currency_rate_id>",
             view_func=AbstractView.as_view(
-                'currency_rate',
+                "currency_rate",
                 concrete_view=CurrencyRateDetailView(
-                    self.__currency_rate_service,
-                    CurrencyRateSerializer
+                    self.__currency_rate_service, CurrencyRateSerializer
                 ),
-                middlewares=middlewares
+                middlewares=middlewares,
             ),
-            methods=['HEAD', 'DELETE']
+            methods=["HEAD", "DELETE"],
         )
 
     def __handle_media_request(self, path):
-        abs_media_path = os.path.join(APP_ROOT_PATH, 'media')
+        abs_media_path = os.path.join(APP_ROOT_PATH, "media")
         abs_path = os.path.join(abs_media_path, path)
         if os.path.isfile(abs_path):
             return send_from_directory(abs_media_path, path)
 
-        return '', 404
+        return "", 404
 
     def __init_media_route(self):
         self.flask_app.add_url_rule(
-            '/media/<path:path>',
-            view_func=self.__handle_media_request,
-            methods=['GET']
+            "/media/<path:path>", view_func=self.__handle_media_request, methods=["GET"]
         )
 
     def __init_sitemap_route(self):
-        @self.flask_app.route('/sitemap.xml')
-        @self.cache.cached(timeout=60*60*24)
+        @self.flask_app.route("/sitemap.xml")
+        @self.cache.cached(timeout=60 * 60 * 24)
         def handle_sitemap_request():
             categories = self.__category_repo.get_all()
             product_types, _ = self.__product_type_repo.get_all()
-            xml = render_template('sitemap.xml',
-                                  categories=categories,
-                                  product_types=product_types,
-                                  base_url=self.flask_app.config.get('HOST'))
+            xml = render_template(
+                "sitemap.xml",
+                categories=categories,
+                product_types=product_types,
+                base_url=self.flask_app.config.get("HOST"),
+            )
 
-            return Response(xml, mimetype='text/xml')
+            return Response(xml, mimetype="text/xml")
 
     def __init_limiter(self):
         limiter = Limiter(
-            self.flask_app,
-            key_func=get_remote_address,
-            default_limits=["60/minute"],
+            self.flask_app, key_func=get_remote_address, default_limits=["60/minute"],
         )
 
         @limiter.request_filter
         def limiter_request_filter():
-            return request.method.lower() == 'options' or 'localhost' in request.host
+            return request.method.lower() == "options" or "localhost" in request.host
 
     def __init_file_storage(self):
         self.__file_storage = AWSStorage(
-            self.flask_app.config['AWS_BUCKET_NAME'],
-            self.flask_app.config['AWS_DEFAULT_REGION'],
-            self.flask_app.config['AWS_ACCESS_KEY_ID'],
-            self.flask_app.config['AWS_SECRET_ACCESS_KEY']
+            self.flask_app.config["AWS_BUCKET_NAME"],
+            self.flask_app.config["AWS_DEFAULT_REGION"],
+            self.flask_app.config["AWS_ACCESS_KEY_ID"],
+            self.flask_app.config["AWS_SECRET_ACCESS_KEY"],
         )
 
     def __init_mail_client(self):
@@ -681,12 +656,9 @@ class App:
         self.mail = Mail(flask_mail)
 
     def __init_cors(self):
-        CORS(
-            self.flask_app,
-            origins=self.flask_app.config['ALLOWED_ORIGINS']
-        )
+        CORS(self.flask_app, origins=self.flask_app.config["ALLOWED_ORIGINS"])
 
     def __init_config(self):
         self.flask_app.config.from_object(
-            os.environ.get('APP_SETTINGS', 'config.DevelopmentConfig')
+            os.environ.get("APP_SETTINGS", "config.DevelopmentConfig")
         )

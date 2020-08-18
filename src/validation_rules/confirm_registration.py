@@ -1,5 +1,14 @@
-from src.validation_rules.utils import EMAIL_REGEX, PASSWORD_REGEX
+from src.validation_rules.validator import DataValidator
 
-CONFIRM_REGISTRATION_VALIDATION_RULES = {
-    'token': {'required': True, 'nullable': False, 'empty': False},
-}
+from typing import TypedDict
+
+
+class ConfirmRegistrationData(TypedDict):
+    token: str
+
+
+class ConfirmRegistrationDataValidator(DataValidator[ConfirmRegistrationData]):
+    def __init__(self):
+        super().__init__(
+            {"token": {"required": True, "nullable": False, "empty": False},}
+        )

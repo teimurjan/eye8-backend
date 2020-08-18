@@ -1,16 +1,19 @@
+from src.validation_rules.feature_type.create import (
+    CreateFeatureTypeData,
+    CreateFeatureTypeDataValidator,
+)
 from src.utils.request import Request
 from typing import Type
 from src.serializers.feature_type import FeatureTypeSerializer
-from cerberus.validator import Validator
 from src.constants.status_codes import OK_CODE
 from src.services.feature_type import FeatureTypeService
 from src.views.base import PaginatableView, ValidatableView
 
 
-class FeatureTypeListView(ValidatableView, PaginatableView):
+class FeatureTypeListView(ValidatableView[CreateFeatureTypeData], PaginatableView):
     def __init__(
         self,
-        validator: Validator,
+        validator: CreateFeatureTypeDataValidator,
         service: FeatureTypeService,
         serializer_cls: Type[FeatureTypeSerializer],
     ):
@@ -44,8 +47,7 @@ class FeatureTypeListView(ValidatableView, PaginatableView):
         return {"data": serialized_feature_types, "meta": meta}, OK_CODE
 
     def post(self, request: Request):
-        data = request.get_json()
-        self._validate(data)
-        feature_type = self._service.create(data, user=request.user)
+        valid_data = self._validate(request.get_json())
+        feature_type = self._service.create(valid_data, user=request.user)
         serialized_feature_type = self._serializer_cls(feature_type).serialize()
         return {"data": serialized_feature_type}, OK_CODE

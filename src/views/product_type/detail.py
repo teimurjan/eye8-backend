@@ -1,7 +1,9 @@
+from src.validation_rules.product_type.update import (
+    UpdateProductTypeData,
+    UpdateProductTypeDataValidator,
+)
 from src.utils.request import Request
 from typing import Type
-
-from cerberus.validator import Validator
 
 from src.constants.status_codes import (
     NOT_FOUND_CODE,
@@ -14,10 +16,10 @@ from src.utils.json import parse_json_from_form_data
 from src.views.base import ValidatableView
 
 
-class ProductTypeDetailView(ValidatableView):
+class ProductTypeDetailView(ValidatableView[UpdateProductTypeData]):
     def __init__(
         self,
-        validator: Validator,
+        validator: UpdateProductTypeDataValidator,
         service: ProductTypeService,
         serializer_cls: Type[ProductTypeSerializer],
     ):
@@ -43,13 +45,14 @@ class ProductTypeDetailView(ValidatableView):
 
     def put(self, request: Request, product_type_id: int):
         try:
-            data = {
-                **parse_json_from_form_data(request.form),
-                "image": request.files.get("image") or request.form.get("image"),
-            }
-            self._validate(data)
+            valid_data = self._validate(
+                {
+                    **parse_json_from_form_data(request.form),
+                    "image": request.files.get("image") or request.form.get("image"),
+                }
+            )
             product_type = self._service.update(
-                product_type_id, data, user=request.user
+                product_type_id, valid_data, user=request.user
             )
             serialized_product_type = (
                 self._serializer_cls(product_type)

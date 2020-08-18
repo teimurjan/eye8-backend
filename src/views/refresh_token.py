@@ -1,4 +1,7 @@
-from cerberus.validator import Validator
+from src.validation_rules.refresh_token import (
+    RefreshTokenData,
+    RefreshTokenDataValidator,
+)
 
 from src.constants.status_codes import OK_CODE
 from src.errors import InvalidEntityFormat
@@ -7,8 +10,8 @@ from src.utils.request import Request
 from src.views.base import ValidatableView
 
 
-class RefreshTokenView(ValidatableView):
-    def __init__(self, user_service: UserService, validator: Validator):
+class RefreshTokenView(ValidatableView[RefreshTokenData]):
+    def __init__(self, user_service: UserService, validator: RefreshTokenDataValidator):
         super().__init__(validator)
         self._user_service = user_service
 

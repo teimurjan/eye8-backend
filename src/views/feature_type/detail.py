@@ -1,16 +1,19 @@
+from src.validation_rules.feature_type.update import (
+    UpdateFeatureTypeData,
+    UpdateFeatureTypeDataValidator,
+)
 from src.utils.request import Request
 from src.services.feature_type import FeatureTypeService
 from typing import Type
 from src.serializers.feature_type import FeatureTypeSerializer
-from cerberus.validator import Validator
 from src.views.base import ValidatableView
 from src.constants.status_codes import NOT_FOUND_CODE, OK_CODE
 
 
-class FeatureTypeDetailView(ValidatableView):
+class FeatureTypeDetailView(ValidatableView[UpdateFeatureTypeData]):
     def __init__(
         self,
-        validator: Validator,
+        validator: UpdateFeatureTypeDataValidator,
         service: FeatureTypeService,
         serializer_cls: Type[FeatureTypeSerializer],
     ):
@@ -33,10 +36,9 @@ class FeatureTypeDetailView(ValidatableView):
 
     def put(self, request: Request, feature_type_id: int):
         try:
-            data = request.get_json()
-            self._validate(data)
+            valid_data = self._validate(request.get_json())
             feature_type = self._service.update(
-                feature_type_id, data, user=request.user
+                feature_type_id, valid_data, user=request.user
             )
             serialized_feature_type = self._serializer_cls(feature_type).serialize()
             return {"data": serialized_feature_type}, OK_CODE

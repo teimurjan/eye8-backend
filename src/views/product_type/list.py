@@ -1,6 +1,8 @@
+from src.validation_rules.product_type.create import (
+    CreateProductTypeData,
+    CreateProductTypeDataValidator,
+)
 from typing import Type
-
-from cerberus.validator import Validator
 
 from src.constants.status_codes import OK_CODE
 from src.errors import InvalidEntityFormat
@@ -24,10 +26,10 @@ def get_sorting_type_from_request(request: Request) -> ProductTypeSortingType:
     return ProductTypeSortingType.DEFAULT
 
 
-class ProductTypeListView(ValidatableView, PaginatableView):
+class ProductTypeListView(ValidatableView[CreateProductTypeData], PaginatableView):
     def __init__(
         self,
-        validator: Validator,
+        validator: CreateProductTypeDataValidator,
         service: ProductTypeService,
         serializer_cls: Type[ProductTypeSerializer],
     ):
@@ -72,12 +74,13 @@ class ProductTypeListView(ValidatableView, PaginatableView):
 
     def post(self, request: Request):
         try:
-            data = {
-                **parse_json_from_form_data(request.form),
-                "image": request.files.get("image"),
-            }
-            self._validate(data)
-            product_type = self._service.create(data, user=request.user)
+            valid_data = self._validate(
+                {
+                    **parse_json_from_form_data(request.form),
+                    "image": request.files.get("image"),
+                }
+            )
+            product_type = self._service.create(valid_data, user=request.user)
             serialized_product_type = (
                 self._serializer_cls(product_type)
                 .with_serialized_feature_types()

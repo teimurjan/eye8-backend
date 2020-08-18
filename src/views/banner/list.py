@@ -1,17 +1,20 @@
+from src.validation_rules.banner.create import (
+    CreateBannerData,
+    CreateBannerDataValidator,
+)
 from src.utils.request import Request
 from src.serializers.banner import BannerSerializer
 from typing import Type
 from src.services.banner import BannerService
-from cerberus.validator import Validator
 from src.constants.status_codes import OK_CODE
 from src.utils.json import parse_json_from_form_data
 from src.views.base import ValidatableView
 
 
-class BannerListView(ValidatableView):
+class BannerListView(ValidatableView[CreateBannerData]):
     def __init__(
         self,
-        validator: Validator,
+        validator: CreateBannerDataValidator,
         service: BannerService,
         serializer_cls: Type[BannerSerializer],
     ):
@@ -31,11 +34,9 @@ class BannerListView(ValidatableView):
         return {"data": serialized_banners}, OK_CODE
 
     def post(self, request: Request):
-        data = {
-            **parse_json_from_form_data(request.form),
-            "image": request.files.get("image"),
-        }
-        self._validate(data)
-        banner = self._service.create(data, user=request.user)
+        parsed_json_data = parse_json_from_form_data(request.form)
+        image = request.files.get("image")
+        valid_data = self._validate({**parsed_json_data, "image": image})
+        banner = self._service.create(valid_data, user=request.user)
         serialized_banners = self._serializer_cls(banner).serialize()
         return {"data": serialized_banners}, OK_CODE

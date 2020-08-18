@@ -1,7 +1,10 @@
+from src.validation_rules.product.update import (
+    UpdateProductData,
+    UpdateProductDataValidator,
+)
 from typing import Type
 from src.serializers.product import ProductSerializer
 from src.services.product import ProductService
-from cerberus.validator import Validator
 from src.views.base import ValidatableView
 from src.errors import InvalidEntityFormat
 from src.constants.status_codes import (
@@ -12,10 +15,10 @@ from src.utils.json import parse_json_from_form_data
 from src.utils.request import Request
 
 
-class ProductDetailView(ValidatableView):
+class ProductDetailView(ValidatableView[UpdateProductData]):
     def __init__(
         self,
-        validator: Validator,
+        validator: UpdateProductDataValidator,
         service: ProductService,
         serializer_cls: Type[ProductSerializer],
     ):
@@ -45,12 +48,13 @@ class ProductDetailView(ValidatableView):
 
     def put(self, request: Request, product_id: int):
         try:
-            data = {
-                **parse_json_from_form_data(request.form),
-                "images": request.files.getlist("images"),
-            }
-            self._validate(data)
-            product = self._service.update(product_id, data, user=request.user)
+            valid_data = self._validate(
+                data={
+                    **parse_json_from_form_data(request.form),
+                    "images": request.files.getlist("images"),
+                }
+            )
+            product = self._service.update(product_id, valid_data, user=request.user)
             serialized_product = (
                 self._serializer_cls(product)
                 .in_language(request.language)

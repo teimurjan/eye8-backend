@@ -1,4 +1,5 @@
 from datetime import datetime
+from src.validation_rules.order.create import OrderItemData
 from typing import Any, Dict, List
 
 from sqlalchemy.orm.session import Session as SQLAlchemySession
@@ -42,7 +43,7 @@ class OrderRepo(NonDeletableRepo):
         user_name: str,
         user_phone_number: str,
         user_address: str,
-        items: List[Dict[str, Any]],
+        items: List[OrderItemData],
         promo_code: PromoCode,
         session: SQLAlchemySession,
     ):

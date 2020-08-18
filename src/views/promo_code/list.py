@@ -1,6 +1,8 @@
+from src.validation_rules.promo_code.create import (
+    CreatePromoCodeData,
+    CreatePromoCodeDataValidator,
+)
 from typing import Type
-
-from cerberus.validator import Validator
 
 from src.constants.status_codes import OK_CODE
 from src.errors import InvalidEntityFormat
@@ -10,10 +12,10 @@ from src.utils.request import Request
 from src.views.base import ValidatableView
 
 
-class PromoCodeListView(ValidatableView):
+class PromoCodeListView(ValidatableView[CreatePromoCodeData]):
     def __init__(
         self,
-        validator: Validator,
+        validator: CreatePromoCodeDataValidator,
         service: PromoCodeService,
         serializer_cls: Type[PromoCodeSerializer],
     ):
@@ -33,9 +35,8 @@ class PromoCodeListView(ValidatableView):
 
     def post(self, request: Request):
         try:
-            data = request.get_json()
-            self._validate(data)
-            promo_code = self._service.create(data, user=request.user)
+            valid_data = self._validate(request.get_json())
+            promo_code = self._service.create(valid_data, user=request.user)
             serialized_promo_code = (
                 self._serializer_cls(promo_code)
                 .in_language(request.language)

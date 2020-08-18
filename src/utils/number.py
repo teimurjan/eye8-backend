@@ -1,7 +1,7 @@
 from typing import TypeVar
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def parse_int(s: T):

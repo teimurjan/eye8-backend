@@ -1,15 +1,17 @@
 from flask import jsonify, request
 from flask.views import View
 
-from src.constants.status_codes import (FORBIDDEN_CODE,
-                                        METHOD_NOT_ALLOWED_CODE,
-                                        UNAUTHORIZED_CODE,
-                                        UNPROCESSABLE_ENTITY_CODE)
+from src.constants.status_codes import (
+    FORBIDDEN_CODE,
+    METHOD_NOT_ALLOWED_CODE,
+    UNAUTHORIZED_CODE,
+    UNPROCESSABLE_ENTITY_CODE,
+)
 from src.errors import AccessRoleError, InvalidEntityFormat, NotAuthorizedError
 
 
 class AbstractView(View):
-    def __init__(self, concrete_view, middlewares, on_respond = None):
+    def __init__(self, concrete_view, middlewares, on_respond=None):
         self._concrete_view = concrete_view
         self._middlewares = middlewares
         self._on_respond = on_respond
@@ -43,4 +45,4 @@ class AbstractView(View):
         if self._concrete_view is not None:
             return getattr(self._concrete_view, http_method)
         else:
-            raise Exception('You must specify a view factory')
+            raise Exception("You must specify a view factory")

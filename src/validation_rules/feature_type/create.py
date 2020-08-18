@@ -1,9 +1,28 @@
-CREATE_FEATURE_TYPE_VALIDATION_RULES = {
-    'names': {
-        'type': 'dict',
-        'keyschema': {'regex': r'^\d+$'},
-        'valueschema': {'type': 'string', 'required': True, 'empty': False, 'nullable': False,'maxlength': 50},
-        'required': True,
-        'nullable': False,
-    },
-}
+from src.validation_rules.validator import DataValidator
+
+from typing import Dict, TypedDict
+
+
+class CreateFeatureTypeData(TypedDict):
+    names: Dict[int, str]
+
+
+class CreateFeatureTypeDataValidator(DataValidator[CreateFeatureTypeData]):
+    def __init__(self):
+        super().__init__(
+            {
+                "names": {
+                    "type": "dict",
+                    "keyschema": {"regex": r"^\d+$"},
+                    "valueschema": {
+                        "type": "string",
+                        "required": True,
+                        "empty": False,
+                        "nullable": False,
+                        "maxlength": 50,
+                    },
+                    "required": True,
+                    "nullable": False,
+                },
+            }
+        )

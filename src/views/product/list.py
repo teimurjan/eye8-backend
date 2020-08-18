@@ -1,7 +1,10 @@
+from src.validation_rules.product.create import (
+    CreateProductData,
+    CreateProductDataValidator,
+)
 from src.utils.request import Request
 from typing import Type
 from src.serializers.product import ProductSerializer
-from cerberus.validator import Validator
 from src.constants.status_codes import OK_CODE
 from src.errors import InvalidEntityFormat
 from src.services.product import ProductService
@@ -9,10 +12,10 @@ from src.utils.json import parse_json_from_form_data
 from src.views.base import PaginatableView, ValidatableView
 
 
-class ProductListView(ValidatableView, PaginatableView):
+class ProductListView(ValidatableView[CreateProductData], PaginatableView):
     def __init__(
         self,
-        validator: Validator,
+        validator: CreateProductDataValidator,
         service: ProductService,
         serializer_cls: Type[ProductSerializer],
     ):
@@ -51,12 +54,13 @@ class ProductListView(ValidatableView, PaginatableView):
 
     def post(self, request: Request):
         try:
-            data = {
-                **parse_json_from_form_data(request.form),
-                "images": request.files.getlist("images"),
-            }
-            self._validate(data)
-            product = self._service.create(data, user=request.user)
+            valid_data = self._validate(
+                {
+                    **parse_json_from_form_data(request.form),
+                    "images": request.files.getlist("images"),
+                }
+            )
+            product = self._service.create(valid_data, user=request.user)
             serialized_product = (
                 self._serializer_cls(product)
                 .in_language(request.language)

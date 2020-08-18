@@ -1,3 +1,5 @@
+from src.validation_rules.promo_code.update import UpdatePromoCodeData
+from src.validation_rules.promo_code.create import CreatePromoCodeData
 from src.repos.order import OrderRepo
 from src.repos.product import ProductRepo
 from src.repos.promo_code import PromoCodeRepo
@@ -13,7 +15,7 @@ class PromoCodeService:
         self._order_repo = order_repo
 
     @allow_roles(["admin", "manager"])
-    def create(self, data, *args, **kwargs):
+    def create(self, data: CreatePromoCodeData, *args, **kwargs):
         try:
             with self._repo.session() as s:
                 products = self._product_repo.filter_by_ids(data["products"], session=s)
@@ -30,7 +32,7 @@ class PromoCodeService:
             raise self.ValueNotUnique()
 
     @allow_roles(["admin", "manager"])
-    def update(self, id_, data, *args, **kwargs):
+    def update(self, id_: int, data: UpdatePromoCodeData, *args, **kwargs):
         try:
             with self._repo.session() as s:
                 if self._order_repo.has_with_promo_code(id_, session=s):
@@ -44,20 +46,22 @@ class PromoCodeService:
             raise self.ValueNotUnique()
 
     @allow_roles(["admin", "manager"])
-    def get_all(self, offset=None, limit=None, deleted=False, *args, **kwargs):
+    def get_all(
+        self, offset: int = None, limit: int = None, deleted=False, *args, **kwargs
+    ):
         return (
             self._repo.get_all(offset=offset, limit=limit, deleted=deleted),
             self._repo.count_all(),
         )
 
-    def get_one(self, id_, deleted=False):
+    def get_one(self, id_: int, deleted=False):
         try:
             promo_code = self._repo.get_by_id(id_, deleted=deleted)
             return promo_code
         except self._repo.DoesNotExist:
             raise self.PromoCodeNotFound()
 
-    def get_one_by_value(self, value):
+    def get_one_by_value(self, value: str):
         try:
             promo_code = self._repo.get_by_value(value)
             if not promo_code.is_active:
@@ -67,7 +71,7 @@ class PromoCodeService:
             raise self.PromoCodeNotFound()
 
     @allow_roles(["admin", "manager"])
-    def delete(self, id_, *args, **kwargs):
+    def delete(self, id_: int, *args, **kwargs):
         try:
             with self._repo.session() as s:
                 if self._order_repo.has_with_promo_code(id_, session=s):
@@ -78,7 +82,7 @@ class PromoCodeService:
             raise self.PromoCodeNotFound()
 
     @allow_roles(["admin", "manager"])
-    def delete_forever(self, id_, *args, **kwargs):
+    def delete_forever(self, id_: int, *args, **kwargs):
         try:
             with self._repo.session() as s:
                 if self._order_repo.has_with_promo_code(id_, session=s):

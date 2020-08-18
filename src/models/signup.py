@@ -5,7 +5,7 @@ from src.models.base import BaseModel
 
 
 class Signup(BaseModel):
-    __tablename__ = 'signup'
+    __tablename__ = "signup"
 
     user_name = Column(String(60), nullable=False)
     user_email = Column(String(80), unique=True, nullable=False)

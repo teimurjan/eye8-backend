@@ -1,16 +1,19 @@
+from src.validation_rules.category.create import (
+    CreateCategoryData,
+    CreateCategoryDataValidator,
+)
 from src.utils.request import Request
 from typing import Type
 from src.serializers.category import CategorySerializer
 from src.services.category import CategoryService
-from cerberus.validator import Validator
 from src.views.base import ValidatableView
 from src.constants.status_codes import OK_CODE
 
 
-class CategoryListView(ValidatableView):
+class CategoryListView(ValidatableView[CreateCategoryData]):
     def __init__(
         self,
-        validator: Validator,
+        validator: CreateCategoryDataValidator,
         service: CategoryService,
         serializer_cls: Type[CategorySerializer],
     ):
@@ -30,9 +33,7 @@ class CategoryListView(ValidatableView):
         return {"data": serialized_categories}, OK_CODE
 
     def post(self, request: Request):
-        data = request.get_json()
-        self._validate(data)
-        category = self._service.create(data, user=request.user)
+        valid_data = self._validate(request.get_json())
+        category = self._service.create(valid_data, user=request.user)
         serialized_category = self._serializer_cls(category).serialize()
         return {"data": serialized_category}, OK_CODE
-

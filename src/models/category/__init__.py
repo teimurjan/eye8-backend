@@ -3,23 +3,19 @@ from src.models.base import BaseModel
 
 
 class Category(BaseModel):
-    __tablename__ = 'category'
+    __tablename__ = "category"
 
     names = orm.relationship(
-        'CategoryName',
-        backref='category',
-        lazy='joined',
-        cascade="all, delete, delete-orphan"
+        "CategoryName",
+        backref="category",
+        lazy="joined",
+        cascade="all, delete, delete-orphan",
     )
-    parent_category_id = Column(
-        Integer,
-        ForeignKey('category.id'),
-        nullable=True
-    )
+    parent_category_id = Column(Integer, ForeignKey("category.id"), nullable=True)
     slug = Column(String(255), nullable=False, unique=True)
 
     def __getitem__(self, key):
-        if key == 'names':
+        if key == "names":
             return self.names
 
         return super().__getitem__(key)

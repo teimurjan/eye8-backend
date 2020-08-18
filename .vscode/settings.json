@@ -1,6 +1,8 @@
 {
+  "python.venvPath": "${workspaceFolder}/virtualenv",
   "python.formatting.provider": "black",
   "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.openFilesOnly": false,
   "python.analysis.diagnosticSeverityOverrides": {
     "reportUnusedImport": "warning"
   }

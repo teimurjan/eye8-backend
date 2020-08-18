@@ -1,3 +1,7 @@
+from src.validation_rules.feature_value.create import (
+    CreateFeatureValueData,
+    CreateFeatureValueDataValidator,
+)
 from typing import Type
 from src.serializers.feature_value import FeatureValueSerializer
 from src.constants.status_codes import OK_CODE
@@ -6,10 +10,10 @@ from src.services.feature_value import FeatureValueService
 from src.views.base import PaginatableView, ValidatableView
 
 
-class FeatureValueListView(ValidatableView, PaginatableView):
+class FeatureValueListView(ValidatableView[CreateFeatureValueData], PaginatableView):
     def __init__(
         self,
-        validator,
+        validator: CreateFeatureValueDataValidator,
         service: FeatureValueService,
         serializer_cls: Type[FeatureValueSerializer],
     ):
@@ -46,9 +50,8 @@ class FeatureValueListView(ValidatableView, PaginatableView):
 
     def post(self, request):
         try:
-            data = request.get_json()
-            self._validate(data)
-            feature_value = self._service.create(data, user=request.user)
+            valid_data = self._validate(request.get_json())
+            feature_value = self._service.create(valid_data, user=request.user)
             serialized_feature_value = (
                 self._serializer_cls(feature_value)
                 .with_serialized_feature_type()

@@ -1,20 +1,25 @@
 import math
+from src.validation_rules.validator import DataValidator
+from typing import Dict, TypeVar, Generic
+
 from src.utils.request import Request
 
-from cerberus.validator import Validator
 
 from src.errors import InvalidEntityFormat
 from src.utils.number import parse_int
 
+V = TypeVar("V")
 
-class ValidatableView:
-    def __init__(self, validator: Validator):
+
+class ValidatableView(Generic[V]):
+    def __init__(self, validator: DataValidator[V]):
         self._validator = validator
 
-    def _validate(self, data):
-        is_valid = self._validator.validate(data)
-        if not is_valid:
-            raise InvalidEntityFormat(self._validator.errors)
+    def _validate(self, data: Dict) -> V:
+        try:
+            return self._validator.validate(data)
+        except self._validator.ValidationError as e:
+            raise InvalidEntityFormat(e.errors)
 
 
 class PaginatableView:

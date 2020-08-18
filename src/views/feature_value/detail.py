@@ -1,17 +1,21 @@
+from src.validation_rules.feature_value.update import (
+    UpdateFeatureValueDataValidator,
+    UpdateFeatureValueData,
+)
 from src.utils.request import Request
 from src.services.feature_value import FeatureValueService
 from src.serializers.feature_value import FeatureValueSerializer
 from typing import Type
-from cerberus.validator import Validator
+
 from src.views.base import ValidatableView
 from src.errors import InvalidEntityFormat
 from src.constants.status_codes import NOT_FOUND_CODE, OK_CODE
 
 
-class FeatureValueDetailView(ValidatableView):
+class FeatureValueDetailView(ValidatableView[UpdateFeatureValueData]):
     def __init__(
         self,
-        validator: Validator,
+        validator: UpdateFeatureValueDataValidator,
         service: FeatureValueService,
         serializer_cls: Type[FeatureValueSerializer],
     ):
@@ -35,10 +39,9 @@ class FeatureValueDetailView(ValidatableView):
 
     def put(self, request: Request, feature_value_id: int):
         try:
-            data = request.get_json()
-            self._validate(data)
+            valid_data = self._validate(request.get_json())
             feature_value = self._service.update(
-                feature_value_id, data, user=request.user
+                feature_value_id, valid_data, user=request.user
             )
             serialized_feature_value = (
                 self._serializer_cls(feature_value)

@@ -1,5 +1,8 @@
+from src.validation_rules.registration import (
+    RegistrationData,
+    RegistrationDataValidator,
+)
 from src.utils.request import Request
-from cerberus.validator import Validator
 
 from src.constants.status_codes import OK_CODE
 from src.errors import InvalidEntityFormat
@@ -7,8 +10,10 @@ from src.services.signup import SignupService
 from src.views.base import ValidatableView
 
 
-class RegistrationView(ValidatableView):
-    def __init__(self, signup_service: SignupService, validator: Validator):
+class RegistrationView(ValidatableView[RegistrationData]):
+    def __init__(
+        self, signup_service: SignupService, validator: RegistrationDataValidator
+    ):
         super().__init__(validator)
         self._signup_service = signup_service
 

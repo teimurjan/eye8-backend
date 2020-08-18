@@ -1,6 +1,7 @@
+from src.validation_rules.order.update import UpdateOrderData, UpdateOrderDataValidator
 from src.utils.request import Request
 from typing import Type
-from cerberus.validator import Validator
+
 from src.constants.status_codes import (
     NOT_FOUND_CODE,
     OK_CODE,
@@ -11,10 +12,10 @@ from src.services.order import OrderService
 from src.views.base import ValidatableView
 
 
-class OrderDetailView(ValidatableView):
+class OrderDetailView(ValidatableView[UpdateOrderData]):
     def __init__(
         self,
-        validator: Validator,
+        validator: UpdateOrderDataValidator,
         service: OrderService,
         serializer_cls: Type[OrderSerializer],
     ):
@@ -39,9 +40,8 @@ class OrderDetailView(ValidatableView):
 
     def put(self, request: Request, order_id: int):
         try:
-            data = request.get_json()
-            self._validate(data)
-            order = self._service.update(order_id, data, user=request.user)
+            valid_data = self._validate(request.get_json())
+            order = self._service.update(order_id, valid_data, user=request.user)
             serialized_product = (
                 self._serializer_cls(order).with_serialized_user().serialize()
             )
