@@ -5,15 +5,15 @@ from src.models import User
 
 
 class UserRepo(NonDeletableRepo):
-    def __init__(self, db_conn):
-        super().__init__(db_conn, User)
+    def __init__(self, db_engine):
+        super().__init__(db_engine, User)
 
     @with_session
-    def get_first_by_email(self, email: str, session: SQLAlchemySession):
+    def get_first_by_email(self, email: str, session: SQLAlchemySession = None):
         return self.get_query(session=session).filter(User.email == email).first()
 
     @with_session
-    def is_email_used(self, email: str, session: SQLAlchemySession):
+    def is_email_used(self, email: str, session: SQLAlchemySession = None):
         return (
             self.get_non_deleted_query(session=session)
             .filter(User.email == email)

@@ -7,7 +7,6 @@ class LanguageHttpMiddleware:
         self._language_repo = language_repo
 
     def handle(self, request: Request):
-        with self._language_repo.session() as s:
-            language_name = request.headers.get("X-Locale", "ru")
-            languages = self._language_repo.filter_by_name(language_name)
-            request.language = languages[0]
+        language_name = request.headers.get("X-Locale", "ru")
+        languages = self._language_repo.filter_by_name(language_name)
+        request.language = languages[0]

@@ -7,11 +7,11 @@ from src.models import FeatureType, FeatureTypeName, Category
 
 
 class FeatureTypeRepo(Repo):
-    def __init__(self, db_conn):
-        super().__init__(db_conn, FeatureType)
+    def __init__(self, db_engine):
+        super().__init__(db_engine, FeatureType)
 
     @with_session
-    def add_feature_type(self, names: Dict, session: SQLAlchemySession):
+    def add_feature_type(self, names: Dict, session: SQLAlchemySession = None):
         feature_type = FeatureType()
 
         set_intl_texts(names, feature_type, "names", FeatureTypeName, session=session)
@@ -26,7 +26,9 @@ class FeatureTypeRepo(Repo):
         return feature_type
 
     @with_session
-    def update_feature_type(self, id_: int, names: Dict, session: SQLAlchemySession):
+    def update_feature_type(
+        self, id_: int, names: Dict, session: SQLAlchemySession = None
+    ):
         feature_type = self.get_by_id(id_, session=session)
 
         set_intl_texts(names, feature_type, "names", FeatureTypeName, session=session)
@@ -39,7 +41,7 @@ class FeatureTypeRepo(Repo):
         return feature_type
 
     @with_session
-    def filter_by_category(self, category: Category, session: SQLAlchemySession):
+    def filter_by_category(self, category: Category, session: SQLAlchemySession = None):
         return (
             self.get_query(session=session)
             .filter(FeatureType.categories.any(Category.id == category.id))

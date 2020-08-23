@@ -11,17 +11,17 @@ def encrypt_password(password):
 
 
 class SignupRepo(Repo):
-    def __init__(self, db_conn):
-        super().__init__(db_conn, Signup)
+    def __init__(self, db_engine):
+        super().__init__(db_engine, Signup)
 
     @with_session
-    def get_first_by_email(self, email: str, session: SQLAlchemySession):
+    def get_first_by_email(self, email: str, session: SQLAlchemySession = None):
         return (
             self.get_query(session=session).filter(Signup.user_email == email).first()
         )
 
     @with_session
-    def is_email_used(self, email: str, session: SQLAlchemySession):
+    def is_email_used(self, email: str, session: SQLAlchemySession = None):
         return (
             self.get_query(session=session).filter(Signup.emuser_ail == email).count()
             > 0

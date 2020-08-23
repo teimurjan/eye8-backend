@@ -6,8 +6,8 @@ from src.models import FeatureValue, FeatureValueName
 
 
 class FeatureValueRepo(Repo):
-    def __init__(self, db_conn):
-        super().__init__(db_conn, FeatureValue)
+    def __init__(self, db_engine):
+        super().__init__(db_engine, FeatureValue)
 
     @with_session
     def add_feature_value(
@@ -35,7 +35,7 @@ class FeatureValueRepo(Repo):
         id_: int,
         names: Dict,
         feature_type: FeatureType,
-        session: SQLAlchemySession,
+        session: SQLAlchemySession = None,
     ):
         feature_value = self.get_by_id(id_, session=session)
 

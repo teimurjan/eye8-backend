@@ -8,12 +8,12 @@ from src.utils.slug import generate_slug
 
 
 class CategoryRepo(Repo):
-    def __init__(self, db_conn):
-        super().__init__(db_conn, Category)
+    def __init__(self, db_engine):
+        super().__init__(db_engine, Category)
 
     @with_session
     def add_category(
-        self, names: Dict, parent_category_id: int, session: SQLAlchemySession
+        self, names: Dict, parent_category_id: int, session: SQLAlchemySession = None,
     ):
         category = Category()
         category.parent_category_id = parent_category_id
@@ -31,7 +31,11 @@ class CategoryRepo(Repo):
 
     @with_session
     def update_category(
-        self, id_: int, names: Dict, parent_category_id: int, session: SQLAlchemySession
+        self,
+        id_: int,
+        names: Dict,
+        parent_category_id: int,
+        session: SQLAlchemySession = None,
     ):
         category = self.get_by_id(id_, session=session)
         category.parent_category_id = parent_category_id
@@ -47,7 +51,7 @@ class CategoryRepo(Repo):
         return category
 
     @with_session
-    def get_children(self, id_: int, session: SQLAlchemySession):
+    def get_children(self, id_: int, session: SQLAlchemySession = None):
         category_recursive_query = (
             self.get_query(session=session)
             .filter(Category.id == id_)
@@ -66,7 +70,7 @@ class CategoryRepo(Repo):
         return session.query(final_query).all()
 
     @with_session
-    def has_children(self, id_: int, session: SQLAlchemySession):
+    def has_children(self, id_: int, session: SQLAlchemySession = None):
         return (
             self.get_query(session=session)
             .filter(Category.parent_category_id == id_)
@@ -75,15 +79,15 @@ class CategoryRepo(Repo):
         )
 
     @with_session
-    def is_slug_used(self, slug: str, session: SQLAlchemySession):
+    def is_slug_used(self, slug: str, session: SQLAlchemySession = None):
         return self.get_query(session=session).filter(Category.slug == slug).count() > 0
 
     @with_session
-    def get_by_slug(self, slug: str, session: SQLAlchemySession):
+    def get_by_slug(self, slug: str, session: SQLAlchemySession = None):
         return self.get_query(session=session).filter(Category.slug == slug).first()
 
     @with_session
-    def get_unique_slug(self, category: Category, session: SQLAlchemySession):
+    def get_unique_slug(self, category: Category, session: SQLAlchemySession = None):
         generated_slug = generate_slug(category)
         if generated_slug == category.slug:
             return generated_slug

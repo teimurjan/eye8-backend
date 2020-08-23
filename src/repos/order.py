@@ -10,8 +10,8 @@ from src.repos.base import NonDeletableRepo, with_session
 
 
 class OrderRepo(NonDeletableRepo):
-    def __init__(self, db_conn):
-        super().__init__(db_conn, Order)
+    def __init__(self, db_engine):
+        super().__init__(db_engine, Order)
 
     @with_session
     def get_for_user(
@@ -27,7 +27,7 @@ class OrderRepo(NonDeletableRepo):
         return orders, q.count()
 
     @with_session
-    def get_by_id(self, id_: int, session: SQLAlchemySession) -> Order:
+    def get_by_id(self, id_: int, session: SQLAlchemySession = None) -> Order:
         orders = (
             self.get_non_deleted_query(session=session).filter(Order.id == id_).all()
         )
@@ -45,7 +45,7 @@ class OrderRepo(NonDeletableRepo):
         user_address: str,
         items: List[OrderItemData],
         promo_code: PromoCode,
-        session: SQLAlchemySession,
+        session: SQLAlchemySession = None,
     ):
         order = Order()
         order.user = user
@@ -83,7 +83,7 @@ class OrderRepo(NonDeletableRepo):
         items: List[Dict[str, Any]],
         status: str,
         promo_code: PromoCode,
-        session: SQLAlchemySession,
+        session: SQLAlchemySession = None,
     ):
         order = self.get_by_id(id_, session=session)
         order.user_name = user_name

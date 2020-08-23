@@ -22,18 +22,19 @@ def with_session(f):
 
 
 class Repo:
-    def __init__(self, db_conn, model_cls: Type[T]):
-        self.__db_conn = db_conn
+    def __init__(self, db_engine, model_cls: Type[T]):
+        self.__db_engine = db_engine
         self._model_cls = model_cls
 
     @contextmanager
     def session(self) -> Iterator[SQLAlchemySession]:
-        Session = sessionmaker(bind=self.__db_conn, expire_on_commit=False)
+        Session = sessionmaker(bind=self.__db_engine)
         session = Session()
+        session.expire_on_commit = False
         try:
             yield session
             session.commit()
-        except:
+        except Exception as e:
             session.rollback()
             raise
         finally:
@@ -44,7 +45,7 @@ class Repo:
         return session.query(self._model_cls)
 
     @with_session
-    def get_by_id(self, id_: int, session: SQLAlchemySession) -> T:
+    def get_by_id(self, id_: int, session: SQLAlchemySession = None) -> T:
         obj = self.get_query(session=session).get(id_)
         if obj is None:
             raise self.DoesNotExist()
@@ -68,11 +69,13 @@ class Repo:
         return self.get_query(session=session).count()
 
     @with_session
-    def filter_by_ids(self, ids: List[int], session: SQLAlchemySession) -> List[T]:
+    def filter_by_ids(
+        self, ids: List[int], session: SQLAlchemySession = None
+    ) -> List[T]:
         return self.get_query(session=session).filter(self._model_cls.id.in_(ids)).all()
 
     @with_session
-    def delete(self, id_: int, session: SQLAlchemySession) -> None:
+    def delete(self, id_: int, session: SQLAlchemySession = None) -> None:
         obj = self.get_by_id(id_, session=session)
         return session.delete(obj)
 
@@ -82,17 +85,17 @@ class Repo:
 
 
 class NonDeletableRepo(Repo):
-    def __init__(self, db_conn, model_cls: Type[T]):
-        super().__init__(db_conn, model_cls)
+    def __init__(self, db_engine, model_cls: Type[T]):
+        super().__init__(db_engine, model_cls)
 
     @with_session
-    def delete(self, id_: int, session: SQLAlchemySession):
+    def delete(self, id_: int, session: SQLAlchemySession = None):
         obj = self.get_by_id(id_, session=session)
         obj.is_deleted = True
         return obj
 
     @with_session
-    def delete_forever(self, id_: int, session: SQLAlchemySession):
+    def delete_forever(self, id_: int, session: SQLAlchemySession = None):
         obj = self.get_by_id(id_, deleted=True, session=session)
         session.delete(obj)
 
@@ -152,7 +155,7 @@ def set_intl_texts(
     owner: T,
     owner_field_name: str,
     intl_text_model_cls: Type[IntlText],
-    session: SQLAlchemySession,
+    session: SQLAlchemySession = None,
 ):
     new_texts = []
     for language_id, value in texts.items():

@@ -30,8 +30,8 @@ def set_instagram_links(product_type, instagram_links):
 
 
 class ProductTypeRepo(NonDeletableRepo):
-    def __init__(self, db_conn, file_storage: Storage):
-        super().__init__(db_conn, ProductType)
+    def __init__(self, db_engine, file_storage: Storage):
+        super().__init__(db_engine, ProductType)
         self.__file_storage = file_storage
 
     @with_session
@@ -44,7 +44,7 @@ class ProductTypeRepo(NonDeletableRepo):
         image: FileInput,
         categories: List[Category],
         feature_types: List[FeatureType],
-        session: SQLAlchemySession,
+        session: SQLAlchemySession = None,
     ):
         product_type = ProductType()
 
@@ -92,7 +92,7 @@ class ProductTypeRepo(NonDeletableRepo):
         image: FileInput,
         categories: List[Category],
         feature_types: List[FeatureType],
-        session: SQLAlchemySession,
+        session: SQLAlchemySession = None,
     ):
         product_type = self.get_by_id(id_, session=session)
 
@@ -167,7 +167,7 @@ class ProductTypeRepo(NonDeletableRepo):
         return [ProductType.id]
 
     @with_session
-    def has_with_category(self, id_: int, session: SQLAlchemySession):
+    def has_with_category(self, id_: int, session: SQLAlchemySession = None):
         return (
             self.get_non_deleted_query(session=session)
             .join(ProductType.categories)
@@ -177,13 +177,13 @@ class ProductTypeRepo(NonDeletableRepo):
         )
 
     @with_session
-    def is_slug_used(self, slug: str, session: SQLAlchemySession):
+    def is_slug_used(self, slug: str, session: SQLAlchemySession = None):
         return (
             self.get_query(session=session).filter(ProductType.slug == slug).count() > 0
         )
 
     @with_session
-    def get_by_slug(self, slug: str, session: SQLAlchemySession):
+    def get_by_slug(self, slug: str, session: SQLAlchemySession = None):
         return (
             self.get_non_deleted_query(session=session)
             .filter(ProductType.slug == slug)
@@ -191,7 +191,9 @@ class ProductTypeRepo(NonDeletableRepo):
         )
 
     @with_session
-    def get_unique_slug(self, product_type: ProductType, session: SQLAlchemySession):
+    def get_unique_slug(
+        self, product_type: ProductType, session: SQLAlchemySession = None
+    ):
         generated_slug = generate_slug(product_type)
         if generated_slug == product_type.slug:
             return generated_slug

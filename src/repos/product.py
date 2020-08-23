@@ -8,8 +8,8 @@ from src.repos.base import NonDeletableRepo, with_session
 
 
 class ProductRepo(NonDeletableRepo):
-    def __init__(self, db_conn, file_storage: Storage):
-        super().__init__(db_conn, Product)
+    def __init__(self, db_engine, file_storage: Storage):
+        super().__init__(db_engine, Product)
         self.__file_storage = file_storage
 
     @with_session
@@ -22,7 +22,7 @@ class ProductRepo(NonDeletableRepo):
         images: List[FileInput],
         product_type: ProductType,
         feature_values: List[FeatureValue],
-        session: SQLAlchemySession,
+        session: SQLAlchemySession = None,
     ):
         product = Product()
 
@@ -58,7 +58,7 @@ class ProductRepo(NonDeletableRepo):
         images: List[Union[FileInput, str]],
         product_type: ProductType,
         feature_values: List[FeatureValue],
-        session: SQLAlchemySession,
+        session: SQLAlchemySession = None,
     ):
         product = self.get_by_id(id_, session=session)
 
@@ -95,7 +95,9 @@ class ProductRepo(NonDeletableRepo):
         return product
 
     @with_session
-    def has_with_product_type(self, product_type_id: int, session: SQLAlchemySession):
+    def has_with_product_type(
+        self, product_type_id: int, session: SQLAlchemySession = None
+    ):
         return (
             self.get_non_deleted_query(session=session)
             .filter(Product.product_type_id == product_type_id)
@@ -104,7 +106,7 @@ class ProductRepo(NonDeletableRepo):
         )
 
     @with_session
-    def get_first_by_upc(self, upc: str, session: SQLAlchemySession):
+    def get_first_by_upc(self, upc: str, session: SQLAlchemySession = None):
         return self.get_query(session=session).filter(Product.upc == upc).first()
 
     @with_session

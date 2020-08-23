@@ -7,11 +7,13 @@ from src.repos.base import Repo, with_session
 
 
 class CurrencyRateRepo(Repo):
-    def __init__(self, db_conn):
-        super().__init__(db_conn, CurrencyRate)
+    def __init__(self, db_engine):
+        super().__init__(db_engine, CurrencyRate)
 
     @with_session
-    def exists_for_date(self, name: str, date: datetime, session: SQLAlchemySession):
+    def exists_for_date(
+        self, name: str, date: datetime, session: SQLAlchemySession = None
+    ):
         before_date = cast(datetime, CurrencyRate.created_on) + timedelta(days=1)
         return (
             self.get_query(session=session)
@@ -23,7 +25,9 @@ class CurrencyRateRepo(Repo):
         )
 
     @with_session
-    def add_currency_rate(self, name: str, value: int, session: SQLAlchemySession):
+    def add_currency_rate(
+        self, name: str, value: int, session: SQLAlchemySession = None
+    ):
         currency_rate = CurrencyRate()
         currency_rate.name = name
         currency_rate.value = value
@@ -37,7 +41,7 @@ class CurrencyRateRepo(Repo):
         return currency_rate
 
     @with_session
-    def filter_by_name(self, name: str, session: SQLAlchemySession):
+    def filter_by_name(self, name: str, session: SQLAlchemySession = None):
         return (
             self.get_query(session=session)
             .filter(CurrencyRate.name == name)

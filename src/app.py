@@ -125,8 +125,7 @@ class App:
         self.__init_limiter()
         self.__init_file_storage()
 
-        engine = db.create_engine(self.flask_app.config["DB_URL"], echo=True)
-        self.__db_conn = engine.connect()
+        self.__db_engine = db.create_engine(self.flask_app.config["DB_URL"], echo=True)
 
         self.__es = Elasticsearch(self.flask_app.config["ELASTICSEARCH_URL"])
 
@@ -138,18 +137,18 @@ class App:
         self.__init_sitemap_route()
 
     def __init_repos(self):
-        self.__category_repo = CategoryRepo(self.__db_conn)
-        self.__feature_type_repo = FeatureTypeRepo(self.__db_conn)
-        self.__feature_value_repo = FeatureValueRepo(self.__db_conn)
-        self.__language_repo = LanguageRepo(self.__db_conn)
-        self.__product_type_repo = ProductTypeRepo(self.__db_conn, self.__file_storage)
-        self.__product_repo = ProductRepo(self.__db_conn, self.__file_storage)
-        self.__user_repo = UserRepo(self.__db_conn)
-        self.__banner_repo = BannerRepo(self.__db_conn, self.__file_storage)
-        self.__signup_repo = SignupRepo(self.__db_conn)
-        self.__order_repo = OrderRepo(self.__db_conn)
-        self.__promo_code_repo = PromoCodeRepo(self.__db_conn)
-        self.__currency_rate_repo = CurrencyRateRepo(self.__db_conn)
+        self.__category_repo = CategoryRepo(self.__db_engine)
+        self.__feature_type_repo = FeatureTypeRepo(self.__db_engine)
+        self.__feature_value_repo = FeatureValueRepo(self.__db_engine)
+        self.__language_repo = LanguageRepo(self.__db_engine)
+        self.__product_type_repo = ProductTypeRepo(self.__db_engine, self.__file_storage)
+        self.__product_repo = ProductRepo(self.__db_engine, self.__file_storage)
+        self.__user_repo = UserRepo(self.__db_engine)
+        self.__banner_repo = BannerRepo(self.__db_engine, self.__file_storage)
+        self.__signup_repo = SignupRepo(self.__db_engine)
+        self.__order_repo = OrderRepo(self.__db_engine)
+        self.__promo_code_repo = PromoCodeRepo(self.__db_engine)
+        self.__currency_rate_repo = CurrencyRateRepo(self.__db_engine)
 
     def __init_services(self):
         self.__category_service = CategoryService(

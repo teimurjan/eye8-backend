@@ -4,8 +4,8 @@ from src.repos.base import Repo, with_session, set_intl_texts
 
 
 class BannerRepo(Repo):
-    def __init__(self, db_conn, file_storage: Storage):
-        super().__init__(db_conn, Banner)
+    def __init__(self, db_engine, file_storage: Storage):
+        super().__init__(db_engine, Banner)
         self.__file_storage = file_storage
 
     @with_session

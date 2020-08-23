@@ -7,8 +7,8 @@ from src.repos.base import NonDeletableRepo, with_session
 
 
 class PromoCodeRepo(NonDeletableRepo):
-    def __init__(self, db_conn):
-        super().__init__(db_conn, PromoCode)
+    def __init__(self, db_engine):
+        super().__init__(db_engine, PromoCode)
 
     @with_session
     def add_promo_code(
@@ -19,7 +19,7 @@ class PromoCodeRepo(NonDeletableRepo):
         is_active: bool,
         disable_on_use: bool,
         products: List[Product],
-        session: SQLAlchemySession,
+        session: SQLAlchemySession = None,
     ):
         if self.is_value_used(value):
             raise self.ValueNotUnique()
@@ -47,7 +47,7 @@ class PromoCodeRepo(NonDeletableRepo):
         is_active: bool,
         disable_on_use: bool,
         products: List[Product],
-        session: SQLAlchemySession,
+        session: SQLAlchemySession = None,
     ):
         promo_code = self.get_by_id(id_, session=session)
 
@@ -63,13 +63,13 @@ class PromoCodeRepo(NonDeletableRepo):
         return promo_code
 
     @with_session
-    def is_value_used(self, value: str, session: SQLAlchemySession):
+    def is_value_used(self, value: str, session: SQLAlchemySession = None):
         return (
             self.get_query(session=session).filter(PromoCode.value == value).count() > 0
         )
 
     @with_session
-    def get_by_value(self, value: str, session: SQLAlchemySession):
+    def get_by_value(self, value: str, session: SQLAlchemySession = None):
         q = self.get_non_deleted_query(session=session).filter(PromoCode.value == value)
         count = q.count()
         if count == 0:
