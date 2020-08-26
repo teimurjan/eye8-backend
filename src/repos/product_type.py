@@ -142,7 +142,7 @@ class ProductTypeRepo(NonDeletableRepo):
         only_available: bool = False,
         session: SQLAlchemySession = None,
     ):
-        q = self.get_non_deleted_query(session=session).join(ProductType.products)
+        q = self.get_non_deleted_query(session=session).outerjoin(ProductType.products)
 
         q = (
             q.join(ProductType.categories).filter(Category.id.in_(category_ids))
