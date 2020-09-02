@@ -1,7 +1,5 @@
-from fileinput import FileInput
-
 import boto3
-
+from werkzeug.datastructures import FileStorage
 
 from src.storage.base import Storage
 
@@ -22,9 +20,20 @@ class AWSStorage(Storage):
             aws_secret_access_key=aws_secret_access_key,
         )
 
-    def save_file(self, file: FileInput):
-        key = f"public/{self.get_secure_filename(file.filename())}"
-        self.__conn.put_object(
-            Bucket=self.__bucket_name, Key=key, Body=file, CacheControl="max-age=259200"
-        )
-        return f"https://{self.__bucket_name}.s3.{self.__region}.amazonaws.com/{key}"
+    def save_file(self, file: FileStorage):
+        if file.filename:
+            key = f"public/{self.get_secure_filename(file.filename)}"
+            self.__conn.put_object(
+                Bucket=self.__bucket_name,
+                Key=key,
+                Body=file,
+                CacheControl="max-age=259200",
+            )
+            return (
+                f"https://{self.__bucket_name}.s3.{self.__region}.amazonaws.com/{key}"
+            )
+        else:
+            raise self.FileHasNoNameError()
+
+    class FileHasNoNameError(Exception):
+        pass
