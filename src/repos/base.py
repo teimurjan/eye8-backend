@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from typing import Dict, Iterator, Type, TypeVar, List
+from typing import Any, Dict, Iterator, Type, TypeVar, List
 
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session as SQLAlchemySession
@@ -41,8 +41,10 @@ class Repo:
             session.close()
 
     @with_session
-    def get_query(self, session: SQLAlchemySession = None) -> SQLAlchemyQuery:
-        return session.query(self._model_cls)
+    def get_query(
+        self, extra_fields: List[Any] = [], session: SQLAlchemySession = None
+    ) -> SQLAlchemyQuery:
+        return session.query(self._model_cls, *extra_fields)
 
     @with_session
     def get_by_id(self, id_: int, session: SQLAlchemySession = None) -> T:
@@ -100,14 +102,18 @@ class NonDeletableRepo(Repo):
         session.delete(obj)
 
     @with_session
-    def get_deleted_query(self, session: SQLAlchemySession = None):
-        return self.get_query(session=session).filter(
+    def get_deleted_query(
+        self, extra_fields: List[Any] = [], session: SQLAlchemySession = None
+    ):
+        return self.get_query(extra_fields=extra_fields, session=session).filter(
             self._model_cls.is_deleted == True
         )
 
     @with_session
-    def get_non_deleted_query(self, session: SQLAlchemySession = None):
-        return self.get_query(session=session).filter(
+    def get_non_deleted_query(
+        self, extra_fields: List[Any] = [], session: SQLAlchemySession = None
+    ) -> SQLAlchemyQuery:
+        return self.get_query(extra_fields=extra_fields, session=session).filter(
             (self._model_cls.is_deleted == None) | (self._model_cls.is_deleted == False)
         )
 

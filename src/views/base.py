@@ -35,7 +35,7 @@ class PaginatableView:
     def _get_pagination_data(self, request: Request):
         page = parse_int(request.args.get("page"))
         if page:
-            limit = parse_int(request.args.get("limit", 21))
+            limit = parse_int(request.args.get("limit", 20))
             offset = limit * (page - 1)
             return {"page": page, "offset": offset, "limit": limit}
         return None

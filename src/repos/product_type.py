@@ -1,8 +1,11 @@
 from fileinput import FileInput
+
 from typing import Dict, List
 
-from sqlalchemy import asc, desc
 from sqlalchemy.orm.session import Session as SQLAlchemySession
+from sqlalchemy.sql.expression import and_, case, exists, text
+from sqlalchemy.sql.functions import func
+
 
 from src.models import (
     ProductType,
@@ -27,6 +30,22 @@ def set_instagram_links(product_type, instagram_links):
         instagram_link.link = link
         instagram_links_.append(instagram_link)
     product_type.instagram_links = instagram_links_
+
+
+availability_col_expr = case(
+    [
+        (
+            exists()
+            .where(
+                and_(Product.product_type_id == ProductType.id, Product.quantity > 0)
+            )
+            .correlate(ProductType),
+            1,
+        )
+    ],
+    else_=0,
+).label("availability")
+min_price_col_expr = func.min(Product.calculated_price).label("min_price")
 
 
 class ProductTypeRepo(NonDeletableRepo):
@@ -133,6 +152,44 @@ class ProductTypeRepo(NonDeletableRepo):
         return product_type
 
     @with_session
+    def _get_all_query(
+        self,
+        sorting_type: ProductTypeSortingType = ProductTypeSortingType.DEFAULT,
+        session: SQLAlchemySession = None,
+    ):
+        if sorting_type == ProductTypeSortingType.NEWLY_ADDED:
+            return (
+                self.get_non_deleted_query(
+                    extra_fields=[availability_col_expr], session=session
+                )
+                .join(Product)
+                .group_by(ProductType)
+                .order_by(text("availability DESC"), ProductType.id.desc())
+            )
+        if sorting_type == ProductTypeSortingType.PRICE_ASCENDING:
+            return (
+                self.get_non_deleted_query(
+                    extra_fields=[availability_col_expr, min_price_col_expr],
+                    session=session,
+                )
+                .join(Product)
+                .group_by(ProductType)
+                .order_by(text("availability DESC, min_price ASC"))
+            )
+        if sorting_type == ProductTypeSortingType.PRICE_ASCENDING:
+            return (
+                self.get_non_deleted_query(
+                    extra_fields=[availability_col_expr, min_price_col_expr],
+                    session=session,
+                )
+                .join(Product)
+                .group_by(ProductType)
+                .order_by(text("availability DESC, min_price DESC"))
+            )
+
+        return self.get_non_deleted_query().order_by(ProductType.id)
+
+    @with_session
     def get_all(
         self,
         category_ids: List[int] = None,
@@ -142,29 +199,23 @@ class ProductTypeRepo(NonDeletableRepo):
         only_available: bool = False,
         session: SQLAlchemySession = None,
     ):
-        q = self.get_non_deleted_query(session=session).outerjoin(ProductType.products)
+
+        q = self._get_all_query(sorting_type=sorting_type, session=session)
 
         q = (
-            q.join(ProductType.categories).filter(Category.id.in_(category_ids))
+            q.filter(ProductType.categories.any(Category.id.in_(category_ids)))
             if category_ids is not None
             else q
         )
 
-        q = q.filter(ProductType.is_available == True) if only_available else q
+        q = q.filter(Product.is_available == True) if only_available else q
 
-        q = q.order_by(*self._get_order_by_from_sorting_type(sorting_type))
+        result = q.offset(offset).limit(limit).all()
 
-        return q.offset(offset).limit(limit).all(), q.count()
-
-    def _get_order_by_from_sorting_type(self, sorting_type: ProductTypeSortingType):
-        if sorting_type == ProductTypeSortingType.PRICE_ASCENDING:
-            return [ProductType.is_available.desc(), asc(Product.calculated_price)]
-        if sorting_type == ProductTypeSortingType.PRICE_DESCENDING:
-            return [ProductType.is_available.desc(), desc(Product.calculated_price)]
-        if sorting_type == ProductTypeSortingType.NEWLY_ADDED:
-            return [ProductType.is_available.desc(), ProductType.id.desc()]
-
-        return [ProductType.id]
+        return (
+            [item[0] if isinstance(item, tuple) else item for item in result],
+            q.count(),
+        )
 
     @with_session
     def has_with_category(self, id_: int, session: SQLAlchemySession = None):
