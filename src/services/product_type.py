@@ -1,11 +1,6 @@
-import json
 from src.validation_rules.product_type.create import CreateProductTypeData
 from src.validation_rules.product_type.update import UpdateProductTypeData
-from src.models.product_type import ProductType
 
-from elasticsearch.client import Elasticsearch
-
-from src.models.intl import Language
 from src.repos.category import CategoryRepo
 from src.repos.feature_type import FeatureTypeRepo
 from src.repos.product import ProductRepo
@@ -21,13 +16,11 @@ class ProductTypeService:
         category_repo: CategoryRepo,
         feature_type_repo: FeatureTypeRepo,
         product_repo: ProductRepo,
-        es: Elasticsearch,
     ):
         self._repo = repo
         self._category_repo = category_repo
         self._feature_type_repo = feature_type_repo
         self._product_repo = product_repo
-        self._es = es
 
     @allow_roles(["admin", "manager"])
     def create(self, data: CreateProductTypeData, *args, **kwargs):
@@ -54,8 +47,6 @@ class ProductTypeService:
                     feature_types,
                     session=s,
                 )
-
-                self.set_to_search_index(product_type)
 
                 return product_type
         except self._category_repo.DoesNotExist:
@@ -90,8 +81,6 @@ class ProductTypeService:
                     session=s,
                 )
 
-                self.set_to_search_index(product_type)
-
                 return product_type
         except self._repo.DoesNotExist:
             raise self.ProductTypeNotFound()
@@ -102,7 +91,7 @@ class ProductTypeService:
 
     def get_all(
         self,
-        only_available: bool = True,
+        only_available: bool = False,
         sorting_type: ProductTypeSortingType = None,
         offset: int = None,
         limit: int = None,
@@ -152,53 +141,11 @@ class ProductTypeService:
                 raise self.ProductTypeWithProductsIsUntouchable()
 
             self._repo.delete(id_)
-            self.remove_from_search_index(id_)
         except self._repo.DoesNotExist:
             raise self.ProductTypeNotFound()
 
-    def set_to_search_index(self, product_type: ProductType):
-        body = {}
-        for name in product_type.names:
-            body[name.language.name] = name.value
-        self._es.index(index="product_type", id=product_type.id, body=body)
-
-    def remove_from_search_index(self, id_: int):
-        self._es.delete(index="product_type", id=id_)
-
-    def search(self, query: str, language: Language):
-        formatted_query = query.lower()
-        body = json.loads(
-            """
-            {
-                "query": {
-                    "bool": {
-                        "should": [
-                            {
-                                "prefix": {
-                                    "%s": "%s"
-                                }
-                            },
-                            {
-                                "match": {
-                                    "%s": {
-                                        "query": "%s",
-                                        "fuzziness": "AUTO",
-                                        "operator": "and"
-                                    }
-                                }
-                            }
-                        ]
-                    }
-                }
-            }
-        """
-            % (language.name, formatted_query, language.name, formatted_query)
-        )
-        result = self._es.search(index="product_type", body=body)
-
-        ids = [hit["_id"] for hit in result["hits"]["hits"]]
-
-        return self._repo.filter_by_ids(ids)
+    def search(self, query: str):
+        return self._repo.search(query)
 
     class ProductTypeNotFound(Exception):
         pass

@@ -72,9 +72,14 @@ class Repo:
 
     @with_session
     def filter_by_ids(
-        self, ids: List[int], session: SQLAlchemySession = None
+        self, ids: List[int], limit: int = None, session: SQLAlchemySession = None
     ) -> List[T]:
-        return self.get_query(session=session).filter(self._model_cls.id.in_(ids)).all()
+        return (
+            self.get_query(session=session)
+            .filter(self._model_cls.id.in_(ids))
+            .limit(limit)
+            .all()
+        )
 
     @with_session
     def delete(self, id_: int, session: SQLAlchemySession = None) -> None:
@@ -148,10 +153,11 @@ class NonDeletableRepo(Repo):
         return self.get_non_deleted_query(session=session).count()
 
     @with_session
-    def filter_by_ids(self, ids: List[int], session: SQLAlchemySession = None):
+    def filter_by_ids(self, ids: List[int], limit: int = None, session: SQLAlchemySession = None):
         return (
             self.get_non_deleted_query(session=session)
             .filter(self._model_cls.id.in_(ids))
+            .limit(limit)
             .all()
         )
 

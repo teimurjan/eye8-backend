@@ -1,7 +1,6 @@
 import os
 
 import sqlalchemy as db
-from elasticsearch import Elasticsearch
 from flask import Flask, Response, request, send_from_directory
 from flask.templating import render_template
 from flask_caching import Cache
@@ -15,7 +14,6 @@ from src.abstract_view import AbstractView
 from src.mail import Mail
 from src.middleware.http.authorize import AuthorizeHttpMiddleware
 from src.middleware.http.language import LanguageHttpMiddleware
-from src.middleware.http.re_init import ReInitMiddleware
 from src.repos.banner import BannerRepo
 from src.repos.category import CategoryRepo
 from src.repos.currency_rate import CurrencyRateRepo
@@ -127,11 +125,8 @@ class App:
 
         self.__db_engine = db.create_engine(self.flask_app.config["DB_URL"], echo=True)
 
-        self.__es = Elasticsearch(self.flask_app.config["ELASTICSEARCH_URL"])
-
         self.__init_repos()
         self.__init_services()
-        self.__init_search()
         self.__init_api_routes()
         self.__init_media_route()
         self.__init_sitemap_route()
@@ -141,7 +136,9 @@ class App:
         self.__feature_type_repo = FeatureTypeRepo(self.__db_engine)
         self.__feature_value_repo = FeatureValueRepo(self.__db_engine)
         self.__language_repo = LanguageRepo(self.__db_engine)
-        self.__product_type_repo = ProductTypeRepo(self.__db_engine, self.__file_storage)
+        self.__product_type_repo = ProductTypeRepo(
+            self.__db_engine, self.__file_storage
+        )
         self.__product_repo = ProductRepo(self.__db_engine, self.__file_storage)
         self.__user_repo = UserRepo(self.__db_engine)
         self.__banner_repo = BannerRepo(self.__db_engine, self.__file_storage)
@@ -152,7 +149,7 @@ class App:
 
     def __init_services(self):
         self.__category_service = CategoryService(
-            self.__category_repo, self.__product_type_repo, self.__es
+            self.__category_repo, self.__product_type_repo
         )
         self.__feature_type_service = FeatureTypeService(self.__feature_type_repo)
         self.__feature_value_service = FeatureValueService(
@@ -164,7 +161,6 @@ class App:
             self.__category_repo,
             self.__feature_type_repo,
             self.__product_repo,
-            self.__es,
         )
         feature_values_policy = FeatureValuesPolicy(self.__feature_type_repo)
         self.__product_service = ProductService(
@@ -188,37 +184,7 @@ class App:
             self.__currency_rate_repo, self.__order_repo
         )
 
-    def __is_search_initialized(self, index):
-        return self.__es.indices.exists(index=index)
-
-    def __init_product_type_search(self):
-        if self.__is_search_initialized(index="product_type"):
-            self.__es.indices.delete("product_type")
-        self.__es.indices.create(index="product_type")
-        product_types, _ = self.__product_type_repo.get_all()
-        for product_type in product_types:
-            self.__product_type_service.set_to_search_index(product_type)
-
-    def __init_category_search(self):
-        if self.__is_search_initialized(index="category"):
-            self.__es.indices.delete("category")
-        self.__es.indices.create(index="category")
-        for category in self.__category_repo.get_all():
-            self.__category_service.set_to_search_index(category)
-
-    def __init_search(self):
-        self.__init_product_type_search()
-        self.__init_category_search()
-
     def __init_api_routes(self):
-        re_init_category_search_middleware = ReInitMiddleware(
-            lambda: self.__is_search_initialized("category"),
-            self.__init_category_search,
-        )
-        re_init_product_type_search_middleware = ReInitMiddleware(
-            lambda: self.__is_search_initialized("product_type"),
-            self.__init_product_type_search,
-        )
         authorize_middleware = AuthorizeHttpMiddleware(self.__user_service)
         language_middleware = LanguageHttpMiddleware(self.__language_repo)
         middlewares = [authorize_middleware, language_middleware]
@@ -335,11 +301,7 @@ class App:
                     CategorySerializer,
                     ProductTypeSerializer,
                 ),
-                middlewares=[
-                    *middlewares,
-                    re_init_product_type_search_middleware,
-                    re_init_category_search_middleware,
-                ],
+                middlewares=middlewares,
             ),
             methods=["GET"],
         )

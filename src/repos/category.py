@@ -1,6 +1,7 @@
 from typing import Dict
 from sqlalchemy.orm.query import aliased
 from sqlalchemy.orm.session import Session as SQLAlchemySession
+from sqlalchemy.sql.functions import func
 
 from src.models import Category, CategoryName
 from src.repos.base import Repo, set_intl_texts, with_session
@@ -96,6 +97,16 @@ class CategoryRepo(Repo):
             return generate_slug(category, with_hash=True)
 
         return generated_slug
+
+    @with_session
+    def search(self, query: str, session: SQLAlchemySession = None):
+        names = (
+            session.query(CategoryName)
+            .filter(func.lower(CategoryName.value).like(f"%{query.lower()}%"))
+            .all()
+        )
+        ids = [name.product_type_id for name in names]
+        return self.filter_by_ids(ids, limit=7)
 
     class DoesNotExist(Exception):
         pass

@@ -152,44 +152,6 @@ class ProductTypeRepo(NonDeletableRepo):
         return product_type
 
     @with_session
-    def _get_all_query(
-        self,
-        sorting_type: ProductTypeSortingType = ProductTypeSortingType.DEFAULT,
-        session: SQLAlchemySession = None,
-    ):
-        if sorting_type == ProductTypeSortingType.NEWLY_ADDED:
-            return (
-                self.get_non_deleted_query(
-                    extra_fields=[availability_col_expr], session=session
-                )
-                .join(Product)
-                .group_by(ProductType)
-                .order_by(text("availability DESC"), ProductType.id.desc())
-            )
-        if sorting_type == ProductTypeSortingType.PRICE_ASCENDING:
-            return (
-                self.get_non_deleted_query(
-                    extra_fields=[availability_col_expr, min_price_col_expr],
-                    session=session,
-                )
-                .join(Product)
-                .group_by(ProductType)
-                .order_by(text("availability DESC, min_price ASC"))
-            )
-        if sorting_type == ProductTypeSortingType.PRICE_ASCENDING:
-            return (
-                self.get_non_deleted_query(
-                    extra_fields=[availability_col_expr, min_price_col_expr],
-                    session=session,
-                )
-                .join(Product)
-                .group_by(ProductType)
-                .order_by(text("availability DESC, min_price DESC"))
-            )
-
-        return self.get_non_deleted_query().order_by(ProductType.id)
-
-    @with_session
     def get_all(
         self,
         category_ids: List[int] = None,
@@ -199,8 +161,33 @@ class ProductTypeRepo(NonDeletableRepo):
         only_available: bool = False,
         session: SQLAlchemySession = None,
     ):
+        q_params = {
+            "extra_fields": [],
+            "order_by": [ProductType.id],
+            "result_getter": lambda item: item,
+        }
 
-        q = self._get_all_query(sorting_type=sorting_type, session=session)
+        if sorting_type == ProductTypeSortingType.NEWLY_ADDED:
+            q_params["extra_fields"] = [availability_col_expr]
+            q_params["order_by"] = [text("availability DESC"), ProductType.id.desc()]
+            q_params["result_getter"] = lambda item: item[0]
+        if sorting_type == ProductTypeSortingType.PRICE_ASCENDING:
+            q_params["extra_fields"] = [availability_col_expr, min_price_col_expr]
+            q_params["order_by"] = [text("availability DESC, min_price ASC")]
+            q_params["result_getter"] = lambda item: item[0]
+        if sorting_type == ProductTypeSortingType.PRICE_ASCENDING:
+            q_params["extra_fields"] = [availability_col_expr, min_price_col_expr]
+            q_params["order_by"] = [text("availability DESC, min_price DESC")]
+            q_params["result_getter"] = lambda item: item[0]
+
+        q = (
+            self.get_non_deleted_query(
+                extra_fields=q_params["extra_fields"], session=session
+            )
+            .join(Product)
+            .group_by(ProductType)
+            .order_by(*q_params["order_by"])
+        )
 
         q = (
             q.filter(ProductType.categories.any(Category.id.in_(category_ids)))
@@ -213,9 +200,19 @@ class ProductTypeRepo(NonDeletableRepo):
         result = q.offset(offset).limit(limit).all()
 
         return (
-            [item[0] if isinstance(item, tuple) else item for item in result],
+            [q_params["result_getter"](item) for item in result],
             q.count(),
         )
+
+    @with_session
+    def search(self, query: str, session: SQLAlchemySession = None):
+        names = (
+            session.query(ProductTypeName)
+            .filter(func.lower(ProductTypeName.value).like(f"%{query.lower()}%"))
+            .all()
+        )
+        ids = [name.product_type_id for name in names]
+        return self.filter_by_ids(ids, limit=7)
 
     @with_session
     def has_with_category(self, id_: int, session: SQLAlchemySession = None):
