@@ -105,7 +105,7 @@ class CategoryRepo(Repo):
             .filter(func.lower(CategoryName.value).like(f"%{query.lower()}%"))
             .all()
         )
-        ids = [name.product_type_id for name in names]
+        ids = [name.category_id for name in names]
         return self.filter_by_ids(ids, limit=7)
 
     class DoesNotExist(Exception):
