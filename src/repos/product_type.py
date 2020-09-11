@@ -180,11 +180,16 @@ class ProductTypeRepo(NonDeletableRepo):
             q_params["order_by"] = [text("availability DESC, min_price DESC")]
             q_params["result_getter"] = lambda item: item[0]
 
+        product_join_conditions = and_(
+            Product.id == ProductType.id,
+            Product.is_deleted != True,
+            Product.is_available == True if only_available else True,
+        )
         q = (
             self.get_non_deleted_query(
                 extra_fields=q_params["extra_fields"], session=session
             )
-            .join(Product)
+            .join(Product, product_join_conditions,)
             .group_by(ProductType)
             .order_by(*q_params["order_by"])
         )
@@ -194,8 +199,6 @@ class ProductTypeRepo(NonDeletableRepo):
             if category_ids is not None
             else q
         )
-
-        q = q.filter(Product.is_available == True) if only_available else q
 
         result = q.offset(offset).limit(limit).all()
 
