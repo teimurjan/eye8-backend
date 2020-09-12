@@ -114,7 +114,7 @@ class ProductRepo(NonDeletableRepo):
         self, product_type_id: int, session: SQLAlchemySession = None
     ):
         return (
-            self.get_query(session=session)
+            self.get_non_deleted_query(session=session)
             .filter(Product.product_type_id == product_type_id)
             .order_by(Product.quantity.desc(), Product.id)
             .all()

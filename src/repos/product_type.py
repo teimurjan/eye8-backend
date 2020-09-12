@@ -189,7 +189,7 @@ class ProductTypeRepo(NonDeletableRepo):
             self.get_non_deleted_query(
                 extra_fields=q_params["extra_fields"], session=session
             )
-            .join(Product, product_join_conditions,)
+            .join(Product, product_join_conditions)
             .group_by(ProductType)
             .order_by(*q_params["order_by"])
         )
