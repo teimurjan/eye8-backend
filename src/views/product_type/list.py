@@ -42,14 +42,14 @@ class ProductTypeListView(ValidatableView[CreateProductTypeData], PaginatableVie
         meta = None
         sorting_type = get_sorting_type_from_request(request)
         only_fields = request.args.getlist("fields")
-        only_available = request.args.get("available") == "1"
+        available = request.args.get("available") == "1"
         serialize_products = request.args.get("products") == "1"
         should_get_raw_intl_field = request.args.get("raw_intl") == "1"
 
         pagination_data = self._get_pagination_data(request)
         if pagination_data:
             product_types, count = self._service.get_all(
-                only_available=only_available,
+                available=available,
                 sorting_type=sorting_type,
                 offset=pagination_data["offset"],
                 limit=pagination_data["limit"],

@@ -3,7 +3,6 @@ from fileinput import FileInput
 from typing import Dict, List
 
 from sqlalchemy.orm.session import Session as SQLAlchemySession
-from sqlalchemy.sql.expression import and_, case, exists, text
 from sqlalchemy.sql.functions import func
 
 
@@ -30,22 +29,6 @@ def set_instagram_links(product_type, instagram_links):
         instagram_link.link = link
         instagram_links_.append(instagram_link)
     product_type.instagram_links = instagram_links_
-
-
-availability_col_expr = case(
-    [
-        (
-            exists()
-            .where(
-                and_(Product.product_type_id == ProductType.id, Product.quantity > 0)
-            )
-            .correlate(ProductType),
-            1,
-        )
-    ],
-    else_=0,
-).label("availability")
-min_price_col_expr = func.min(Product.calculated_price).label("min_price")
 
 
 class ProductTypeRepo(NonDeletableRepo):
@@ -158,39 +141,32 @@ class ProductTypeRepo(NonDeletableRepo):
         sorting_type: ProductTypeSortingType = ProductTypeSortingType.DEFAULT,
         offset: int = None,
         limit: int = None,
-        only_available: bool = False,
+        available: bool = False,
         session: SQLAlchemySession = None,
     ):
         q_params = {
-            "extra_fields": [],
             "order_by": [ProductType.id],
-            "result_getter": lambda item: item,
         }
 
         if sorting_type == ProductTypeSortingType.NEWLY_ADDED:
-            q_params["extra_fields"] = [availability_col_expr]
-            q_params["order_by"] = [text("availability DESC"), ProductType.id.desc()]
-            q_params["result_getter"] = lambda item: item[0]
+            q_params["order_by"] = [
+                ProductType.availability.desc(),
+                ProductType.id.desc(),
+            ]
         if sorting_type == ProductTypeSortingType.PRICE_ASCENDING:
-            q_params["extra_fields"] = [availability_col_expr, min_price_col_expr]
-            q_params["order_by"] = [text("availability DESC, min_price ASC")]
-            q_params["result_getter"] = lambda item: item[0]
-        if sorting_type == ProductTypeSortingType.PRICE_ASCENDING:
-            q_params["extra_fields"] = [availability_col_expr, min_price_col_expr]
-            q_params["order_by"] = [text("availability DESC, min_price DESC")]
-            q_params["result_getter"] = lambda item: item[0]
+            q_params["order_by"] = [
+                ProductType.availability.desc(),
+                ProductType.min_price.asc(),
+            ]
+        if sorting_type == ProductTypeSortingType.PRICE_DESCENDING:
+            q_params["order_by"] = [
+                ProductType.availability.desc(),
+                ProductType.min_price.desc(),
+            ]
 
-        product_join_conditions = and_(
-            Product.id == ProductType.id,
-            Product.is_deleted != True,
-            Product.is_available == True if only_available else True,
-        )
         q = (
-            self.get_non_deleted_query(
-                extra_fields=q_params["extra_fields"], session=session
-            )
-            .join(Product, product_join_conditions)
-            .group_by(ProductType)
+            self.get_non_deleted_query(session=session)
+            .filter(Product.availability == True if available else True)
             .order_by(*q_params["order_by"])
         )
 
@@ -200,12 +176,7 @@ class ProductTypeRepo(NonDeletableRepo):
             else q
         )
 
-        result = q.offset(offset).limit(limit).all()
-
-        return (
-            [q_params["result_getter"](item) for item in result],
-            q.count(),
-        )
+        return (q.offset(offset).limit(limit).all(), 0)
 
     @with_session
     def search(self, query: str, session: SQLAlchemySession = None):

@@ -1,4 +1,8 @@
+from src.models.product import Product
 from sqlalchemy import Column, ForeignKey, Integer, String, Table, orm
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.sql.expression import and_, case, exists, select
+from sqlalchemy.sql.functions import func
 
 from src.models.base import BaseModel, NonDeletableModel
 
@@ -65,3 +69,49 @@ class ProductType(NonDeletableModel):
             return self.instagram_links
 
         return super().__getitem__(key)
+
+    @hybrid_property
+    def min_price(self):
+        return min(
+            [
+                product.price * ((100 - product.discount) * 0.01)
+                for product in self.products
+            ]
+        )
+
+    @min_price.expression
+    def min_price(cls):
+        return (
+            select([func.min(Product.price * ((100 - Product.discount) * 0.01))])
+            .where(Product.product_type_id == cls.id)
+            .correlate(cls)
+            .label("min_price")
+        )
+
+    @hybrid_property
+    def availability(self):
+        return len([product for product in self.products if product.quantity > 0])
+
+    @availability.expression
+    def availability(cls):
+        return select(
+            [
+                case(
+                    [
+                        (
+                            exists()
+                            .where(
+                                and_(
+                                    Product.product_type_id == cls.id,
+                                    Product.quantity > 0,
+                                )
+                            )
+                            .correlate(cls),
+                            True,
+                        )
+                    ],
+                    else_=False,
+                )
+            ]
+        ).label("availability")
+

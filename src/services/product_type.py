@@ -91,13 +91,13 @@ class ProductTypeService:
 
     def get_all(
         self,
-        only_available: bool = False,
+        available: bool = False,
         sorting_type: ProductTypeSortingType = None,
         offset: int = None,
         limit: int = None,
     ):
         return self._repo.get_all(
-            only_available=only_available,
+            available=available,
             offset=offset,
             limit=limit,
             sorting_type=sorting_type,
