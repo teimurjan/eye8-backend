@@ -166,7 +166,7 @@ class ProductTypeRepo(NonDeletableRepo):
 
         q = (
             self.get_non_deleted_query(session=session)
-            .filter(Product.availability == True if available else True)
+            .filter(ProductType.availability == True if available else True)
             .order_by(*q_params["order_by"])
         )
 
