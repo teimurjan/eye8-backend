@@ -176,7 +176,7 @@ class ProductTypeRepo(NonDeletableRepo):
             else q
         )
 
-        return (q.offset(offset).limit(limit).all(), 0)
+        return (q.offset(offset).limit(limit).all(), q.count())
 
     @with_session
     def search(self, query: str, session: SQLAlchemySession = None):
