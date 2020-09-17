@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, Integer, ForeignKey, orm
+from sqlalchemy.ext.hybrid import hybrid_property
 from src.models.base import NonDeletableModel
 
 
@@ -19,3 +20,19 @@ class Product(NonDeletableModel):
         cascade="all, delete, delete-orphan",
     )
     upc = Column(String, nullable=True, unique=True)
+
+    @hybrid_property
+    def total_price(self):
+        return self.price * ((100 - self.discount) * 0.01)
+
+    @total_price.expression
+    def total_price(cls):
+        return cls.price * ((100 - cls.discount) * 0.01)
+
+    @hybrid_property
+    def availability(self):
+        return self.quantity > 0
+
+    @availability.expression
+    def availability(cls):
+        return cls.quantity > 0

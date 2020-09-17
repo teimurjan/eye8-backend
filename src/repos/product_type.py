@@ -3,7 +3,9 @@ from fileinput import FileInput
 from typing import Dict, List
 
 from sqlalchemy.orm.session import Session as SQLAlchemySession
+from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.functions import func
+from sqlalchemy import and_, or_
 
 
 from src.models import (
@@ -12,9 +14,9 @@ from src.models import (
     ProductTypeName,
     ProductTypeShortDescription,
     Category,
-    Product,
     ProductTypeInstagramLink,
     FeatureType,
+    Product,
 )
 from src.repos.base import NonDeletableRepo, set_intl_texts, with_session
 from src.storage.base import Storage
@@ -150,30 +152,38 @@ class ProductTypeRepo(NonDeletableRepo):
 
         if sorting_type == ProductTypeSortingType.NEWLY_ADDED:
             q_params["order_by"] = [
-                ProductType.availability.desc(),
+                Product.availability.desc(),
                 ProductType.id.desc(),
             ]
         if sorting_type == ProductTypeSortingType.PRICE_ASCENDING:
             q_params["order_by"] = [
-                ProductType.availability.desc(),
-                ProductType.min_price.asc(),
+                Product.availability.desc(),
+                Product.total_price.asc(),
             ]
         if sorting_type == ProductTypeSortingType.PRICE_DESCENDING:
             q_params["order_by"] = [
-                ProductType.availability.desc(),
-                ProductType.min_price.desc(),
+                Product.availability.desc(),
+                Product.total_price.desc(),
             ]
+
+        join_condition_arr = and_(
+            ProductType.id == Product.product_type_id,
+            or_(Product.is_deleted == False, Product.is_deleted == None),
+        )
+        categories_filter = (
+            ProductType.categories.any(Category.id.in_(category_ids))
+            if category_ids is not None
+            else True
+        )
+        availability_filter = Product.quantity > 0 if available else True
 
         q = (
             self.get_non_deleted_query(session=session)
-            .filter(ProductType.availability == True if available else True)
+            .outerjoin(Product, join_condition_arr)
+            .options(contains_eager(ProductType.products))
+            .filter(categories_filter)
+            .filter(availability_filter)
             .order_by(*q_params["order_by"])
-        )
-
-        q = (
-            q.filter(ProductType.categories.any(Category.id.in_(category_ids)))
-            if category_ids is not None
-            else q
         )
 
         return (q.offset(offset).limit(limit).all(), q.count())
@@ -227,3 +237,4 @@ class ProductTypeRepo(NonDeletableRepo):
 
     class DoesNotExist(Exception):
         pass
+

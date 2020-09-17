@@ -18,6 +18,7 @@ class ProductTypeByCategoryView(PaginatableView):
         pagination_data = self._get_pagination_data(request)
         sorting_type = get_sorting_type_from_request(request)
         serialize_products = request.args.get("products") == "1"
+        available = request.args.get("available") == "1"
 
         meta = None
         product_types = []
@@ -26,6 +27,7 @@ class ProductTypeByCategoryView(PaginatableView):
             product_types, count = self._service.get_all_by_category(
                 category_slug,
                 sorting_type,
+                available=available,
                 offset=pagination_data["offset"],
                 limit=pagination_data["limit"],
             )
@@ -34,7 +36,7 @@ class ProductTypeByCategoryView(PaginatableView):
             )
         else:
             product_types, count = self._service.get_all_by_category(
-                category_slug, sorting_type
+                category_slug, sorting_type, available=available,
             )
 
         serialized_product_types = [

@@ -97,16 +97,14 @@ class ProductTypeService:
         limit: int = None,
     ):
         return self._repo.get_all(
-            available=available,
-            offset=offset,
-            limit=limit,
-            sorting_type=sorting_type,
+            available=available, offset=offset, limit=limit, sorting_type=sorting_type,
         )
 
     def get_all_by_category(
         self,
         category_slug: str,
         sorting_type: ProductTypeSortingType,
+        available: bool = False,
         offset: int = None,
         limit: int = None,
     ):
@@ -115,9 +113,14 @@ class ProductTypeService:
             children_categories = self._category_repo.get_children(
                 category.id, session=s
             )
-            categories_ids = [category.id for category in children_categories]
+            category_ids = [category.id for category in children_categories]
             product_types, count = self._repo.get_all(
-                categories_ids, sorting_type, offset, limit, session=s
+                available=available,
+                category_ids=category_ids,
+                sorting_type=sorting_type,
+                offset=offset,
+                limit=limit,
+                session=s,
             )
             return product_types, count
 
