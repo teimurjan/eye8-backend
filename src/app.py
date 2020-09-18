@@ -277,7 +277,7 @@ class App:
         self.flask_app.add_url_rule(
             "/api/categories/<path:category_slug>/product_types",
             view_func=self.cache.cached(
-                1,
+                60*60,
                 response_filter=response_filter,
                 make_cache_key=category_product_types_cache.make_cache_key,
             )(
