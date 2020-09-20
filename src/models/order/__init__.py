@@ -29,4 +29,4 @@ class Order(NonDeletableModel):
         lazy="joined",
     )
     # statuses are: idle, approved, rejected, completed
-    status = Column(String(60), default=OrderStatus.IDLE, nullable=False)
+    status = Column(String(60), default="idle", nullable=False)
