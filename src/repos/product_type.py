@@ -189,14 +189,21 @@ class ProductTypeRepo(NonDeletableRepo):
         return (q.offset(offset).limit(limit).all(), q.count())
 
     @with_session
-    def search(self, query: str, session: SQLAlchemySession = None):
+    def search(
+        self, query: str, available: bool = False, session: SQLAlchemySession = None
+    ):
         names = (
             session.query(ProductTypeName)
             .filter(func.lower(ProductTypeName.value).like(f"%{query.lower()}%"))
             .all()
         )
         ids = [name.product_type_id for name in names]
-        return self.filter_by_ids(ids, limit=7)
+        availability_filter = ProductType.products.any(Product.quantity > 0) if available else True
+        return (
+            self.get_non_deleted_query()
+            .filter(ProductType.id.in_(ids))
+            .filter(availability_filter)
+        )
 
     @with_session
     def has_with_category(self, id_: int, session: SQLAlchemySession = None):

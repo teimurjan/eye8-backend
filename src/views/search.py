@@ -21,8 +21,10 @@ class SearchView:
         self._product_type_serializer_cls = product_type_serializer_cls
 
     def get(self, request: Request, query: str):
+        available = request.args.get("available") == "1"
+
         categories = self._category_service.search(query)
-        product_types = self._product_type_service.search(query)
+        product_types = self._product_type_service.search(query, available)
         should_get_raw_intl_field = request.args.get("raw_intl") == "1"
         serialized_categories = [
             self._category_serializer_cls(product_type)

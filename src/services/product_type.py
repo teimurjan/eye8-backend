@@ -147,8 +147,10 @@ class ProductTypeService:
         except self._repo.DoesNotExist:
             raise self.ProductTypeNotFound()
 
-    def search(self, query: str):
-        return self._repo.search(query)
+    def search(
+        self, query: str, available: bool = False,
+    ):
+        return self._repo.search(query, available)
 
     class ProductTypeNotFound(Exception):
         pass
