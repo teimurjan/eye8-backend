@@ -18,7 +18,7 @@ class PromoCodeService:
     def create(self, data: CreatePromoCodeData, *args, **kwargs):
         try:
             with self._repo.session() as s:
-                products = self._product_repo.filter_by_ids(data["products_ids"], session=s)
+                products = self._product_repo.filter_by_ids(data["products"], session=s)
                 return self._repo.add_promo_code(
                     data["value"].lower(),
                     data["discount"],
@@ -35,7 +35,7 @@ class PromoCodeService:
     def update(self, id_: int, data: UpdatePromoCodeData, *args, **kwargs):
         try:
             with self._repo.session() as s:
-                products = self._product_repo.filter_by_ids(data["products_ids"], session=s)
+                products = self._product_repo.filter_by_ids(data["products"], session=s)
                 return self._repo.update_promo_code(
                     id_, data["is_active"], data["disable_on_use"], products, session=s
                 )

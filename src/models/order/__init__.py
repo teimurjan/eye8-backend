@@ -20,8 +20,8 @@ class Order(NonDeletableModel):
     user_address = Column(String(255), nullable=False)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=True)
     user = relationship("User", lazy="joined")
-    promo_code_value = Column(String(60), nullable=False)
-    promo_code_discount = Column(Integer, nullable=False)
+    promo_code_value = Column(String(60), nullable=True)
+    promo_code_discount = Column(Integer, nullable=True)
     promo_code_amount = Column(Float, nullable=True)
     promo_code_products_ids = Column(ARRAY(Integer), item_type=Integer)
     items = relationship(

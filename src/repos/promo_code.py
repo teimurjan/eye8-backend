@@ -30,7 +30,7 @@ class PromoCodeRepo(NonDeletableRepo):
         promo_code.amount = amount
         promo_code.is_active = is_active
         promo_code.disable_on_use = disable_on_use
-        promo_code.products_ids = [product.id for product in products]
+        promo_code.products = products
 
         session.add(promo_code)
         session.flush()
@@ -53,7 +53,7 @@ class PromoCodeRepo(NonDeletableRepo):
 
         promo_code.is_active = is_active
         promo_code.disable_on_use = disable_on_use
-        promo_code.products_ids = [product.id for product in products]
+        promo_code.products = products
 
         session.flush()
 

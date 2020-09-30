@@ -55,7 +55,7 @@ class OrderRepo(NonDeletableRepo):
         order.promo_code_value = promo_code.value
         order.promo_code_discount = promo_code.discount
         order.promo_code_amount = promo_code.amount
-        order.promo_code_products_ids = promo_code.products_ids
+        order.promo_code_products = promo_code.products
 
         order_items = []
         for item in items:
