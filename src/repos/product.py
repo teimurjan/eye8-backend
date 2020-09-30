@@ -102,13 +102,34 @@ class ProductRepo(NonDeletableRepo):
         )
 
     @with_session
-    def get_for_product_type(
-        self, product_type_id: int, session: SQLAlchemySession = None
+    def get_all(
+        self,
+        product_type_id: int = None,
+        available=False,
+        offset=None,
+        limit=None,
+        deleted=False,
+        session: SQLAlchemySession = None,
     ):
+        q = (
+            self.get_deleted_query(session=session)
+            if deleted
+            else self.get_non_deleted_query(session=session)
+        )
+
         return (
-            self.get_non_deleted_query(session=session)
-            .filter(Product.product_type_id == product_type_id)
-            .order_by(Product.quantity.desc(), Product.id)
+            q.filter(Product.availability == True if available else True)
+            .filter(
+                Product.product_type_id == product_type_id
+                if product_type_id is not None
+                else True
+            )
+            .order_by(
+                Product.quantity.desc(),
+                Product.id if product_type_id is not None else self._model_cls.id,
+            )
+            .offset(offset)
+            .limit(limit)
             .all()
         )
 

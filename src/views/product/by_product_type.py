@@ -14,7 +14,11 @@ class ProductByProductTypeView(PaginatableView):
         self._serializer_cls = serializer_cls
 
     def get(self, request: Request, product_type_id: int):
-        products = self._service.get_for_product_type(product_type_id)
+        available = request.args.get("available") == "1"
+
+        products, _ = self._service.get_all(
+            product_type_id=product_type_id, available=available
+        )
 
         serialized_product_types = [
             self._serializer_cls(product)

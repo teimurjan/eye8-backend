@@ -25,22 +25,25 @@ class ProductListView(ValidatableView[CreateProductData], PaginatableView):
 
     def get(self, request: Request):
         pagination_data = self._get_pagination_data(request)
+        available = request.args.get("available") == '1'
 
         meta = None
         products = []
 
-        if request.args.get("ids"):
+        if request.args.get("ids") is not None:
             ids = request.args.getlist("ids", type=int)
             products = self._service.get_by_ids(ids)
         elif pagination_data:
             products, count = self._service.get_all(
-                offset=pagination_data["offset"], limit=pagination_data["limit"]
+                available=available,
+                offset=pagination_data["offset"],
+                limit=pagination_data["limit"],
             )
             meta = self._get_meta(
                 count, pagination_data["page"], pagination_data["limit"]
             )
         else:
-            products, _ = self._service.get_all()
+            products, _ = self._service.get_all(available=available)
 
         serialized_products = [
             self._serializer_cls(product)

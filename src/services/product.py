@@ -82,14 +82,25 @@ class ProductService:
         except self._product_type_repo.DoesNotExist:
             raise self.ProductTypeInvalid()
 
-    def get_all(self, offset: int = None, limit: int = None):
-        return self._repo.get_all(offset=offset, limit=limit), self._repo.count_all()
+    def get_all(
+        self,
+        product_type_id: int = None,
+        available: bool = False,
+        offset: int = None,
+        limit: int = None,
+    ):
+        return (
+            self._repo.get_all(
+                available=available,
+                product_type_id=product_type_id,
+                offset=offset,
+                limit=limit,
+            ),
+            self._repo.count_all(),
+        )
 
     def get_by_ids(self, ids: List[int]):
         return self._repo.filter_by_ids(ids)
-
-    def get_for_product_type(self, product_type_id: int):
-        return self._repo.get_for_product_type(product_type_id)
 
     def get_one(self, id_: int):
         try:

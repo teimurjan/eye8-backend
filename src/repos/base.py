@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from src.models.product import Product
 from typing import Any, Dict, Iterator, Type, TypeVar, List
 
 from sqlalchemy.orm import sessionmaker
@@ -138,7 +139,11 @@ class NonDeletableRepo(Repo):
 
     @with_session
     def get_all(
-        self, offset=None, limit=None, deleted=False, session: SQLAlchemySession = None
+        self,
+        offset=None,
+        limit=None,
+        deleted=False,
+        session: SQLAlchemySession = None,
     ):
         q = (
             self.get_deleted_query(session=session)
@@ -153,7 +158,9 @@ class NonDeletableRepo(Repo):
         return self.get_non_deleted_query(session=session).count()
 
     @with_session
-    def filter_by_ids(self, ids: List[int], limit: int = None, session: SQLAlchemySession = None):
+    def filter_by_ids(
+        self, ids: List[int], limit: int = None, session: SQLAlchemySession = None
+    ):
         return (
             self.get_non_deleted_query(session=session)
             .filter(self._model_cls.id.in_(ids))
