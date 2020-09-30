@@ -108,9 +108,6 @@ class OrderService:
                         promo_code_value.lower(), session=s
                     )
 
-                    if not promo_code.is_active:
-                        raise self.PromoCodeInvalid()
-
                     if promo_code.disable_on_use:
                         promo_code.is_active = False
 

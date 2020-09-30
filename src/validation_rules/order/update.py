@@ -45,7 +45,7 @@ class UpdateOrderDataValidator(DataValidator[UpdateOrderData]):
                 "user_address": {"type": "string", "required": True, "nullable": False},
                 "status": {
                     "type": "string",
-                    "allowed": list(map(str, OrderStatus)),
+                    "allowed": ['idle', 'completed', 'approved', 'rejected'],
                     "required": True,
                     "nullable": False,
                 },

@@ -9,7 +9,7 @@ class OrderStatus(Enum):
     IDLE = "idle"
     REJECTED = "rejected"
     APPROVED = "approved"
-    COMPLETED = "completedƒ"
+    COMPLETED = "completed"
 
 
 class Order(NonDeletableModel):
