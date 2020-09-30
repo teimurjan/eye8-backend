@@ -25,12 +25,12 @@ class ProductListView(ValidatableView[CreateProductData], PaginatableView):
 
     def get(self, request: Request):
         pagination_data = self._get_pagination_data(request)
-        ids = request.args.getlist("ids", type=int)
 
         meta = None
         products = []
 
-        if ids:
+        if request.args.get("ids"):
+            ids = request.args.getlist("ids", type=int)
             products = self._service.get_by_ids(ids)
         elif pagination_data:
             products, count = self._service.get_all(
