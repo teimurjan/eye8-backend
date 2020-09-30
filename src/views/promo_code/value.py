@@ -18,7 +18,6 @@ class PromoCodeValueView:
             serialized_promo_code = (
                 self._serializer_cls(promo_code)
                 .in_language(request.language)
-                .with_serialized_products()
                 .serialize()
             )
             return {"data": serialized_promo_code}, OK_CODE

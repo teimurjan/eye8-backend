@@ -9,7 +9,7 @@ class CreatePromoCodeData(TypedDict):
     value: str
     is_active: Optional[bool]
     disable_on_use: Optional[bool]
-    products: List[int]
+    products_ids: List[int]
 
 
 class CreatePromoCodeDataValidator(DataValidator[CreatePromoCodeData]):
@@ -36,7 +36,7 @@ class CreatePromoCodeDataValidator(DataValidator[CreatePromoCodeData]):
                     "required": False,
                     "nullable": False,
                 },
-                "products": {
+                "products_ids": {
                     "type": "list",
                     "schema": {"type": "integer", "nullable": False},
                     "required": True,

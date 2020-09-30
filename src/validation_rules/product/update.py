@@ -7,7 +7,6 @@ class UpdateProductData(TypedDict):
     product_type_id: int
     images: List[str]
     price: int
-    upc: Optional[str]
     discount: Optional[int]
     quantity: int
     feature_values: List[int]
@@ -36,7 +35,6 @@ class UpdateProductDataValidator(DataValidator[UpdateProductData]):
                     "min": 1,
                     "nullable": False,
                 },
-                "upc": {"type": "string", "required": False, "nullable": True},
                 "discount": {
                     "type": "integer",
                     "required": True,

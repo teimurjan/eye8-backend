@@ -52,7 +52,10 @@ class OrderRepo(NonDeletableRepo):
         order.user_name = user_name
         order.user_phone_number = user_phone_number
         order.user_address = user_address
-        order.promo_code = promo_code
+        order.promo_code_value = promo_code.value
+        order.promo_code_discount = promo_code.discount
+        order.promo_code_amount = promo_code.amount
+        order.promo_code_products_ids = promo_code.products_ids
 
         order_items = []
         for item in items:
@@ -123,16 +126,6 @@ class OrderRepo(NonDeletableRepo):
 
         if end_date is not None:
             q = q.filter(Order.created_on < end_date)
-
-        return q.count() > 0
-
-    @with_session
-    def has_with_promo_code(
-        self, promo_code_id: int, session: SQLAlchemySession = None
-    ):
-        q = self.get_non_deleted_query(session=session).filter(
-            Order.promo_code_id == promo_code_id
-        )
 
         return q.count() > 0
 

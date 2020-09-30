@@ -8,9 +8,6 @@ Create Date: 2020-07-11 17:49:23.722374
 from alembic import op
 import sqlalchemy as sa
 
-from src.repos.product_type import ProductTypeRepo
-from src.repos.category import CategoryRepo
-
 # revision identifiers, used by Alembic.
 revision = '85f4718f22e7'
 down_revision = '49f65be4ef36'

@@ -18,7 +18,6 @@ class ProductRepo(NonDeletableRepo):
         price: int,
         discount: int,
         quantity: int,
-        upc: Optional[str],
         images: List[FileInput],
         product_type: ProductType,
         feature_values: List[FeatureValue],
@@ -29,7 +28,6 @@ class ProductRepo(NonDeletableRepo):
         product.price = price
         product.discount = discount
         product.quantity = quantity
-        product.upc = upc
         product.feature_values = feature_values
         product.product_type = product_type
 
@@ -54,7 +52,6 @@ class ProductRepo(NonDeletableRepo):
         price: int,
         discount: int,
         quantity: int,
-        upc: Optional[str],
         images: List[Union[FileInput, str]],
         product_type: ProductType,
         feature_values: List[FeatureValue],
@@ -65,7 +62,6 @@ class ProductRepo(NonDeletableRepo):
         product.price = price
         product.discount = discount
         product.quantity = quantity
-        product.upc = upc
         product.feature_values = feature_values
         product.product_type = product_type
 
@@ -104,10 +100,6 @@ class ProductRepo(NonDeletableRepo):
             .count()
             > 0
         )
-
-    @with_session
-    def get_first_by_upc(self, upc: str, session: SQLAlchemySession = None):
-        return self.get_query(session=session).filter(Product.upc == upc).first()
 
     @with_session
     def get_for_product_type(

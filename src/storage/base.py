@@ -6,7 +6,7 @@ from werkzeug.utils import secure_filename
 
 class Storage(ABC):
     @abstractmethod
-    def save_file(self, file: FileInput):
+    def save_file(self, file: FileInput) -> str:
         pass
 
     def get_secure_filename(self, filename: str):

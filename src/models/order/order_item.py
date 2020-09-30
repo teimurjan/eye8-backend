@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, ForeignKey
+from sqlalchemy import Column, Integer, ForeignKey
 from sqlalchemy.orm import relationship
 
 from src.models.base import BaseModel
@@ -9,7 +9,6 @@ class OrderItem(BaseModel):
 
     order_id = Column(Integer, ForeignKey("order.id"), nullable=False, index=True)
     quantity = Column(Integer, nullable=False)
-    product_upc = Column(String, nullable=True)
     product_price_per_item = Column(Integer, nullable=False)
     product_discount = Column(Integer, nullable=False)
     product_id = Column(

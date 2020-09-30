@@ -18,7 +18,7 @@ class PromoCodeService:
     def create(self, data: CreatePromoCodeData, *args, **kwargs):
         try:
             with self._repo.session() as s:
-                products = self._product_repo.filter_by_ids(data["products"], session=s)
+                products = self._product_repo.filter_by_ids(data["products_ids"], session=s)
                 return self._repo.add_promo_code(
                     data["value"].lower(),
                     data["discount"],
@@ -35,10 +35,7 @@ class PromoCodeService:
     def update(self, id_: int, data: UpdatePromoCodeData, *args, **kwargs):
         try:
             with self._repo.session() as s:
-                if self._order_repo.has_with_promo_code(id_, session=s):
-                    raise self.PromoCodeWithOrdersIsUntouchable()
-
-                products = self._product_repo.filter_by_ids(data["products"], session=s)
+                products = self._product_repo.filter_by_ids(data["products_ids"], session=s)
                 return self._repo.update_promo_code(
                     id_, data["is_active"], data["disable_on_use"], products, session=s
                 )
@@ -74,9 +71,6 @@ class PromoCodeService:
     def delete(self, id_: int, *args, **kwargs):
         try:
             with self._repo.session() as s:
-                if self._order_repo.has_with_promo_code(id_, session=s):
-                    raise self.PromoCodeWithOrdersIsUntouchable()
-
                 return self._repo.delete(id_, session=s)
         except self._repo.DoesNotExist:
             raise self.PromoCodeNotFound()
@@ -85,9 +79,6 @@ class PromoCodeService:
     def delete_forever(self, id_: int, *args, **kwargs):
         try:
             with self._repo.session() as s:
-                if self._order_repo.has_with_promo_code(id_, session=s):
-                    raise self.PromoCodeWithOrdersIsUntouchable()
-
                 return self._repo.delete_forever(id_, session=s)
         except self._repo.DoesNotExist:
             raise self.PromoCodeNotFound()

@@ -37,17 +37,10 @@ class ProductService:
                 ):
                     raise self.FeatureValuesInvalid()
 
-                if (
-                    data.get("upc") is not None
-                    and self._repo.get_first_by_upc(data["upc"]) is not None
-                ):
-                    raise self.SameUPC()
-
                 return self._repo.add_product(
                     data["price"],
                     data["discount"],
                     data["quantity"],
-                    data.get("upc"),
                     data["images"],
                     product_type,
                     feature_values,
@@ -74,17 +67,11 @@ class ProductService:
                 ):
                     raise self.FeatureValuesInvalid()
 
-                if data.get("upc") is not None:
-                    product_with_same_upc = self._repo.get_first_by_upc(data["upc"])
-                    if product_with_same_upc and product_with_same_upc.id != id_:
-                        raise self.SameUPC()
-
                 return self._repo.update_product(
                     id_,
                     data["price"],
                     data["discount"],
                     data["quantity"],
-                    data.get("upc"),
                     data["images"],
                     product_type,
                     feature_values,
@@ -126,5 +113,3 @@ class ProductService:
     class ProductTypeInvalid(Exception):
         pass
 
-    class SameUPC(Exception):
-        pass

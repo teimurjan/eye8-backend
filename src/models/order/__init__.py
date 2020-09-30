@@ -1,5 +1,5 @@
 from enum import Enum
-from sqlalchemy import Column, String, Integer, ForeignKey
+from sqlalchemy import Column, String, Integer, ForeignKey, Float, ARRAY
 from sqlalchemy.orm import relationship
 
 from src.models.base import NonDeletableModel
@@ -20,8 +20,10 @@ class Order(NonDeletableModel):
     user_address = Column(String(255), nullable=False)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=True)
     user = relationship("User", lazy="joined")
-    promo_code_id = Column(Integer, ForeignKey("promo_code.id"), nullable=True)
-    promo_code = relationship("PromoCode", lazy="joined")
+    promo_code_value = Column(String(60), nullable=False)
+    promo_code_discount = Column(Integer, nullable=False)
+    promo_code_amount = Column(Float, nullable=True)
+    promo_code_products_ids = Column(ARRAY(Integer), item_type=Integer)
     items = relationship(
         "OrderItem",
         backref="order",

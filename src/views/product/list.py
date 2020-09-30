@@ -72,5 +72,3 @@ class ProductListView(ValidatableView[CreateProductData], PaginatableView):
             raise InvalidEntityFormat({"feature_values": "errors.invalidID"})
         except self._service.ProductTypeInvalid:
             raise InvalidEntityFormat({"product_type": "errors.invalidID"})
-        except self._service.SameUPC:
-            raise InvalidEntityFormat({"upc": "errors.sameUPC"})

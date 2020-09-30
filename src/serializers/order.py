@@ -13,7 +13,10 @@ class OrderSerializer(IntlSerializer):
         self._user_phone_number = order.user_phone_number
         self._user_address = order.user_address
         self._status = order.status
-        self._promo_code = order.promo_code
+        self._promo_code_value = order.promo_code_value
+        self._promo_code_discount = order.promo_code_discount
+        self._promo_code_amount = order.promo_code_amount
+        self._promo_code_products_ids = order.promo_code_products_ids
         self._items = order.items
         self._created_on = order.created_on
         self._updated_on = order.updated_on
@@ -29,17 +32,10 @@ class OrderSerializer(IntlSerializer):
                 "user_phone_number": self._user_phone_number,
                 "user_address": self._user_address,
                 "status": self._status,
-                "promo_code": (
-                    {
-                        "value": self._promo_code.value,
-                        "id": self._promo_code.id,
-                        "discount": self._promo_code.discount,
-                        "amount": self._promo_code.amount,
-                        "products": self._serialize_promo_code_products(),
-                    }
-                    if self._promo_code
-                    else None
-                ),
+                "promo_code_value": self._promo_code_value,
+                "promo_code_discount": self._promo_code_discount,
+                "promo_code_amount": self._promo_code_amount,
+                "promo_code_products_ids": self._promo_code_products_ids,
                 "created_on": self._created_on,
                 "updated_on": self._updated_on,
                 "is_deleted": self._is_deleted,
@@ -54,11 +50,6 @@ class OrderSerializer(IntlSerializer):
 
     def _serialize_user(self):
         return self._serialize_relation("_user", User)
-
-    def _serialize_promo_code_products(self):
-        if self._promo_code and self._get_relation_safely(self._promo_code, "products"):
-            return [product.id for product in self._promo_code.products]
-        return None
 
     def with_serialized_items(self):
         items = self._get_relation_safely(self, "_items")
@@ -80,11 +71,6 @@ class OrderSerializer(IntlSerializer):
                         item.product.discount
                         if not is_completed and item.product
                         else item.product_discount
-                    ),
-                    "product_upc": (
-                        item.product.upc
-                        if not is_completed and item.product
-                        else item.product_upc
                     ),
                     "product": (
                         ProductSerializer(item.product)

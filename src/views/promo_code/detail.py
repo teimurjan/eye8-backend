@@ -30,7 +30,6 @@ class PromoCodeDetailView(ValidatableView[UpdatePromoCodeData]):
             serialized_promo_code = (
                 self._serializer_cls(promo_code)
                 .in_language(request.language)
-                .with_serialized_products()
                 .serialize()
             )
             return {"data": serialized_promo_code}, OK_CODE
@@ -51,8 +50,6 @@ class PromoCodeDetailView(ValidatableView[UpdatePromoCodeData]):
             return {"data": serialized_promo_code}, OK_CODE
         except self._service.PromoCodeNotFound:
             return {}, NOT_FOUND_CODE
-        except self._service.PromoCodeWithOrdersIsUntouchable:
-            raise InvalidEntityFormat({"orders": "errors.hasOrders"})
         except self._service.ValueNotUnique:
             raise InvalidEntityFormat({"value": "errors.alreadyExists"})
 
@@ -66,8 +63,6 @@ class PromoCodeDetailView(ValidatableView[UpdatePromoCodeData]):
                 self._service.delete(promo_code_id, user=request.user)
 
             return {}, OK_CODE
-        except self._service.PromoCodeWithOrdersIsUntouchable:
-            raise InvalidEntityFormat({"orders": "errors.hasOrders"})
         except self._service.PromoCodeNotFound:
             return {}, NOT_FOUND_CODE
 

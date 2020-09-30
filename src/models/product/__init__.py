@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, ForeignKey, orm
+from sqlalchemy import Column, Integer, ForeignKey, orm
 from sqlalchemy.ext.hybrid import hybrid_property
 from src.models.base import NonDeletableModel
 
@@ -19,7 +19,6 @@ class Product(NonDeletableModel):
         lazy="joined",
         cascade="all, delete, delete-orphan",
     )
-    upc = Column(String, nullable=True, unique=True)
 
     @hybrid_property
     def total_price(self):
