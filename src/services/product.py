@@ -89,14 +89,11 @@ class ProductService:
         offset: int = None,
         limit: int = None,
     ):
-        return (
-            self._repo.get_all(
-                available=available,
-                product_type_id=product_type_id,
-                offset=offset,
-                limit=limit,
-            ),
-            self._repo.count_all(),
+        return self._repo.get_all(
+            available=available,
+            product_type_id=product_type_id,
+            offset=offset,
+            limit=limit,
         )
 
     def get_by_ids(self, ids: List[int]):

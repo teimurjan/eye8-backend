@@ -1,5 +1,5 @@
 from fileinput import FileInput
-from typing import List, Optional, Union, cast
+from typing import List, Union, cast
 from sqlalchemy.orm.session import Session as SQLAlchemySession
 
 from src.storage.base import Storage
@@ -117,7 +117,7 @@ class ProductRepo(NonDeletableRepo):
             else self.get_non_deleted_query(session=session)
         )
 
-        return (
+        q = (
             q.filter(Product.availability == True if available else True)
             .filter(
                 Product.product_type_id == product_type_id
@@ -128,10 +128,9 @@ class ProductRepo(NonDeletableRepo):
                 Product.quantity.desc(),
                 Product.id if product_type_id is not None else self._model_cls.id,
             )
-            .offset(offset)
-            .limit(limit)
-            .all()
         )
+
+        return q.offset(offset).limit(limit).all(), q.count()
 
     class DoesNotExist(Exception):
         pass
