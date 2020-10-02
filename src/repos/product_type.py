@@ -4,9 +4,7 @@ from typing import Dict, List
 
 from sqlalchemy.orm.session import Session as SQLAlchemySession
 from sqlalchemy.orm import contains_eager
-from sqlalchemy.sql.functions import func
-from sqlalchemy import and_, or_
-
+from sqlalchemy import and_, or_, select, func
 
 from src.models import (
     ProductType,
@@ -192,13 +190,14 @@ class ProductTypeRepo(NonDeletableRepo):
     def search(
         self, query: str, available: bool = False, session: SQLAlchemySession = None
     ):
-        names = (
-            session.query(ProductTypeName)
-            .filter(func.lower(ProductTypeName.value).like(f"%{query.lower()}%"))
-            .all()
+        search_treshold = 0.1
+        query = select([ProductTypeName.product_type_id]).where(
+            func.similarity(ProductTypeName.value, query) > search_treshold
         )
-        ids = [name.product_type_id for name in names]
-        availability_filter = ProductType.products.any(Product.quantity > 0) if available else True
+        ids = [row[0] for row in session.connection().execute(query)]
+        availability_filter = (
+            ProductType.products.any(Product.quantity > 0) if available else True
+        )
         return (
             self.get_non_deleted_query()
             .filter(ProductType.id.in_(ids))
