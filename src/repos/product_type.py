@@ -169,10 +169,7 @@ class ProductTypeRepo(NonDeletableRepo):
             else True
         )
         products_filter = ProductType.products.any(
-            and_(
-                Product.quantity > 0 if available else True,
-                or_(Product.is_deleted == False, Product.is_deleted == None),
-            )
+            and_(Product.quantity > 0 if available else True,)
         )
 
         q = (

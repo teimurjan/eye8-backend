@@ -58,7 +58,11 @@ class ProductType(NonDeletableModel):
         lazy="joined",
         cascade="all, delete, delete-orphan",
     )
-    products = orm.relationship("Product", lazy="joined",)
+    products = orm.relationship(
+        "Product",
+        lazy="joined",
+        primaryjoin="and_(ProductType.id == Product.product_type_id, or_(Product.is_deleted == False, Product.is_deleted == None))",
+    )
     image = Column(String(255), nullable=True)
     categories = orm.relationship(
         "Category",
