@@ -118,7 +118,7 @@ class ProductRepo(NonDeletableRepo):
         )
 
         q = (
-            q.filter(Product.availability == True if available else True)
+            q.filter(Product.available == True if available else True)
             .filter(
                 Product.product_type_id == product_type_id
                 if product_type_id is not None

@@ -3,7 +3,6 @@ from fileinput import FileInput
 from typing import Dict, List
 
 from sqlalchemy.orm.session import Session as SQLAlchemySession
-from sqlalchemy.orm import contains_eager
 from sqlalchemy import and_, or_, select, func
 
 from src.models import (
@@ -150,37 +149,36 @@ class ProductTypeRepo(NonDeletableRepo):
 
         if sorting_type == ProductTypeSortingType.NEWLY_ADDED:
             q_params["order_by"] = [
-                Product.availability.desc(),
+                ProductType.products_available.desc(),
                 ProductType.id.desc(),
             ]
         if sorting_type == ProductTypeSortingType.PRICE_ASCENDING:
             q_params["order_by"] = [
-                Product.availability.desc(),
-                Product.total_price.asc(),
+                ProductType.products_available.desc(),
+                ProductType.products_min_price.asc(),
             ]
         if sorting_type == ProductTypeSortingType.PRICE_DESCENDING:
             q_params["order_by"] = [
-                Product.availability.desc(),
-                Product.total_price.desc(),
+                ProductType.products_available.desc(),
+                ProductType.products_min_price.desc(),
             ]
 
-        join_condition_arr = and_(
-            ProductType.id == Product.product_type_id,
-            or_(Product.is_deleted == False, Product.is_deleted == None),
-        )
         categories_filter = (
             ProductType.categories.any(Category.id.in_(category_ids))
             if category_ids is not None
             else True
         )
-        availability_filter = Product.quantity > 0 if available else True
+        products_filter = ProductType.products.any(
+            and_(
+                Product.quantity > 0 if available else True,
+                or_(Product.is_deleted == False, Product.is_deleted == None),
+            )
+        )
 
         q = (
             self.get_non_deleted_query(session=session)
-            .outerjoin(Product, join_condition_arr)
-            .options(contains_eager(ProductType.products))
             .filter(categories_filter)
-            .filter(availability_filter)
+            .filter(products_filter)
             .order_by(*q_params["order_by"])
         )
 
@@ -195,13 +193,13 @@ class ProductTypeRepo(NonDeletableRepo):
             func.similarity(ProductTypeName.value, query) > search_treshold
         )
         ids = [row[0] for row in session.connection().execute(query)]
-        availability_filter = (
-            ProductType.products.any(Product.quantity > 0) if available else True
-        )
+
         return (
             self.get_non_deleted_query()
             .filter(ProductType.id.in_(ids))
-            .filter(availability_filter)
+            .filter(
+                ProductType.products.any(Product.quantity > 0) if available else True
+            )
         )
 
     @with_session

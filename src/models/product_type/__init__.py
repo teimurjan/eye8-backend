@@ -1,6 +1,20 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Table, orm
+from sqlalchemy import (
+    Column,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+    orm,
+    select,
+    func,
+    case,
+    exists,
+    and_,
+)
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from src.models.base import BaseModel, NonDeletableModel
+from src.models.product import Product
 
 ProductTypeXCategoryTable = Table(
     "product_type_x_category",
@@ -53,6 +67,46 @@ class ProductType(NonDeletableModel):
         backref=orm.backref("product_types"),
     )
     slug = Column(String(255), nullable=False, unique=True)
+
+    @hybrid_property
+    def products_min_price(self):
+        return min([product.total_price for product in self.products])
+
+    @products_min_price.expression
+    def products_min_price(cls):
+        return (
+            select([func.min(Product.total_price)])
+            .where(Product.product_type_id == cls.id)
+            .correlate(cls)
+            .label("products_min_price")
+        )
+
+    @hybrid_property
+    def products_available(self):
+        return len([product for product in self.products if product.available]) > 0
+
+    @products_available.expression
+    def products_available(cls):
+        return select(
+            [
+                case(
+                    [
+                        (
+                            exists()
+                            .where(
+                                and_(
+                                    Product.product_type_id == cls.id,
+                                    Product.available,
+                                )
+                            )
+                            .correlate(cls),
+                            True,
+                        )
+                    ],
+                    else_=False,
+                )
+            ]
+        ).label("products_available")
 
     def __getitem__(self, key):
         if key == "names":

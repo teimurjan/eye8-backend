@@ -29,9 +29,9 @@ class Product(NonDeletableModel):
         return cls.price * ((100 - cls.discount) * 0.01)
 
     @hybrid_property
-    def availability(self):
+    def available(self):
         return self.quantity > 0
 
-    @availability.expression
-    def availability(cls):
+    @available.expression
+    def available(cls):
         return cls.quantity > 0
