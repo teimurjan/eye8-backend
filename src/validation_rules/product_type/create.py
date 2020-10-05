@@ -8,6 +8,7 @@ class CreateProductTypeData(TypedDict):
     descriptions: Dict[int, str]
     short_descriptions: Dict[int, str]
     feature_types: List[int]
+    characteristic_values: List[int]
     categories: List[int]
     instagram_links: List[str]
     image: str
@@ -56,6 +57,12 @@ class CreateProductTypeDataValidator(DataValidator[CreateProductTypeData]):
                     "nullable": False,
                 },
                 "feature_types": {
+                    "type": "list",
+                    "schema": {"type": "integer", "nullable": False},
+                    "required": True,
+                    "nullable": False,
+                },
+                "characteristic_values": {
                     "type": "list",
                     "schema": {"type": "integer", "nullable": False},
                     "required": True,

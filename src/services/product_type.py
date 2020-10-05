@@ -1,3 +1,4 @@
+from src.repos.characteristic_value import CharacteristicValueRepo
 from src.validation_rules.product_type.create import CreateProductTypeData
 from src.validation_rules.product_type.update import UpdateProductTypeData
 
@@ -16,11 +17,13 @@ class ProductTypeService:
         category_repo: CategoryRepo,
         feature_type_repo: FeatureTypeRepo,
         product_repo: ProductRepo,
+        characteristic_value_repo: CharacteristicValueRepo,
     ):
         self._repo = repo
         self._category_repo = category_repo
         self._feature_type_repo = feature_type_repo
         self._product_repo = product_repo
+        self._characteristic_value_repo = characteristic_value_repo
 
     @allow_roles(["admin", "manager"])
     def create(self, data: CreateProductTypeData, *args, **kwargs):
@@ -33,9 +36,14 @@ class ProductTypeService:
                 feature_types = self._feature_type_repo.filter_by_ids(
                     data["feature_types"], session=s
                 )
-
                 if len(feature_types) != len(data["feature_types"]):
                     raise self.FeatureTypesInvalid()
+
+                characteristic_values = self._characteristic_value_repo.filter_by_ids(
+                    data["characteristic_values"], session=s
+                )
+                if len(characteristic_values) != len(data["characteristic_values"]):
+                    raise self.CharacteristicValuesInvalid()
 
                 product_type = self._repo.add_product_type(
                     data["names"],
@@ -45,6 +53,7 @@ class ProductTypeService:
                     data["image"],
                     categories,
                     feature_types,
+                    characteristic_values,
                     session=s,
                 )
 
@@ -65,9 +74,14 @@ class ProductTypeService:
                 feature_types = self._feature_type_repo.filter_by_ids(
                     data["feature_types"], session=s
                 )
-
                 if len(feature_types) != len(data["feature_types"]):
                     raise self.FeatureTypesInvalid()
+
+                characteristic_values = self._characteristic_value_repo.filter_by_ids(
+                    data["characteristic_values"], session=s
+                )
+                if len(characteristic_values) != len(data["characteristic_values"]):
+                    raise self.CharacteristicValuesInvalid()
 
                 product_type = self._repo.update_product_type(
                     id_,
@@ -78,6 +92,7 @@ class ProductTypeService:
                     data["image"],
                     categories,
                     feature_types,
+                    characteristic_values,
                     session=s,
                 )
 
@@ -159,6 +174,9 @@ class ProductTypeService:
         pass
 
     class FeatureTypesInvalid(Exception):
+        pass
+
+    class CharacteristicValuesInvalid(Exception):
         pass
 
     class ProductTypeWithProductsIsUntouchable(Exception):

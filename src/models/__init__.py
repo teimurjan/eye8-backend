@@ -3,6 +3,10 @@ from src.models.user import User
 from src.models.intl import Language, CurrencyRate
 from src.models.category import Category
 from src.models.category.name import CategoryName
+from src.models.characteristic import Characteristic
+from src.models.characteristic.name import CharacteristicName
+from src.models.characteristic_value import CharacteristicValue
+from src.models.characteristic_value.name import CharacteristicValueName
 from src.models.feature_type import FeatureType
 from src.models.feature_type.name import FeatureTypeName
 from src.models.feature_value import FeatureValue

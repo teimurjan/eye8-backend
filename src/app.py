@@ -1,4 +1,5 @@
 import os
+from src.repos.characteristic_value import CharacteristicValueRepo
 
 import sqlalchemy as db
 from flask import Flask, Response, request, send_from_directory
@@ -17,6 +18,7 @@ from src.middleware.http.language import LanguageHttpMiddleware
 from src.repos.banner import BannerRepo
 from src.repos.category import CategoryRepo
 from src.repos.currency_rate import CurrencyRateRepo
+from src.repos.characteristic import CharacteristicRepo
 from src.repos.feature_type import FeatureTypeRepo
 from src.repos.feature_value import FeatureValueRepo
 from src.repos.language import LanguageRepo
@@ -29,6 +31,8 @@ from src.repos.user import UserRepo
 from src.serializers.banner import BannerSerializer
 from src.serializers.category import CategorySerializer
 from src.serializers.currency_rate import CurrencyRateSerializer
+from src.serializers.characteristic import CharacteristicSerializer
+from src.serializers.characteristic_value import CharacteristicValueSerializer
 from src.serializers.feature_type import FeatureTypeSerializer
 from src.serializers.feature_value import FeatureValueSerializer
 from src.serializers.language import LanguageSerializer
@@ -39,6 +43,8 @@ from src.serializers.promo_code import PromoCodeSerializer
 from src.services.banner import BannerService
 from src.services.category import CategoryService
 from src.services.currency_rate import CurrencyRateService
+from src.services.characteristic import CharacteristicService
+from src.services.characteristic_value import CharacteristicValueService
 from src.services.feature_type import FeatureTypeService
 from src.services.feature_value import FeatureValueService
 from src.services.language import LanguageService
@@ -58,6 +64,14 @@ from src.validation_rules.category.create import CreateCategoryDataValidator
 from src.validation_rules.category.update import UpdateCategoryDataValidator
 from src.validation_rules.confirm_registration import ConfirmRegistrationDataValidator
 from src.validation_rules.currency_rate.create import CreateCurrencyRateDataValidator
+from src.validation_rules.characteristic.create import CreateCharacteristicDataValidator
+from src.validation_rules.characteristic.update import UpdateCharacteristicDataValidator
+from src.validation_rules.characteristic_value.create import (
+    CreateCharacteristicValueDataValidator,
+)
+from src.validation_rules.characteristic_value.update import (
+    UpdateCharacteristicValueDataValidator,
+)
 from src.validation_rules.feature_type.create import CreateFeatureTypeDataValidator
 from src.validation_rules.feature_type.update import UpdateFeatureTypeDataValidator
 from src.validation_rules.feature_value.create import CreateFeatureValueDataValidator
@@ -81,6 +95,10 @@ from src.views.category.slug import CategorySlugView
 from src.views.confirm_registration import ConfirmRegistrationView
 from src.views.currency_rate.detail import CurrencyRateDetailView
 from src.views.currency_rate.list import CurrencyRateListView
+from src.views.characteristic.detail import CharacteristicDetailView
+from src.views.characteristic.list import CharacteristicListView
+from src.views.characteristic_value.detail import CharacteristicValueDetailView
+from src.views.characteristic_value.list import CharacteristicValueListView
 from src.views.feature_type.detail import FeatureTypeDetailView
 from src.views.feature_type.list import FeatureTypeListView
 from src.views.feature_value.detail import FeatureValueDetailView
@@ -133,6 +151,8 @@ class App:
 
     def __init_repos(self):
         self.__category_repo = CategoryRepo(self.__db_engine)
+        self.__characteristic_repo = CharacteristicRepo(self.__db_engine)
+        self.__characteristic_value_repo = CharacteristicValueRepo(self.__db_engine)
         self.__feature_type_repo = FeatureTypeRepo(self.__db_engine)
         self.__feature_value_repo = FeatureValueRepo(self.__db_engine)
         self.__language_repo = LanguageRepo(self.__db_engine)
@@ -151,6 +171,12 @@ class App:
         self.__category_service = CategoryService(
             self.__category_repo, self.__product_type_repo
         )
+        self.__characteristic_service = CharacteristicService(
+            self.__characteristic_repo
+        )
+        self.__characteristic_value_service = CharacteristicValueService(
+            self.__characteristic_value_repo, self.__characteristic_repo,
+        )
         self.__feature_type_service = FeatureTypeService(self.__feature_type_repo)
         self.__feature_value_service = FeatureValueService(
             self.__feature_value_repo, self.__feature_type_repo
@@ -161,6 +187,7 @@ class App:
             self.__category_repo,
             self.__feature_type_repo,
             self.__product_repo,
+            self.__characteristic_value_repo,
         )
         feature_values_policy = FeatureValuesPolicy(self.__feature_type_repo)
         self.__product_service = ProductService(
@@ -277,7 +304,7 @@ class App:
         self.flask_app.add_url_rule(
             "/api/categories/<path:category_slug>/product_types",
             view_func=self.cache.cached(
-                60*60,
+                60 * 60,
                 response_filter=response_filter,
                 make_cache_key=category_product_types_cache.make_cache_key,
             )(
@@ -304,6 +331,58 @@ class App:
                 middlewares=middlewares,
             ),
             methods=["GET"],
+        )
+        self.flask_app.add_url_rule(
+            "/api/characteristics",
+            view_func=AbstractView.as_view(
+                "characteristics",
+                concrete_view=CharacteristicListView(
+                    CreateCharacteristicDataValidator(),
+                    self.__characteristic_service,
+                    CharacteristicSerializer,
+                ),
+                middlewares=middlewares,
+            ),
+            methods=["GET", "POST"],
+        ),
+        self.flask_app.add_url_rule(
+            "/api/characteristics/<int:characteristic_id>",
+            view_func=AbstractView.as_view(
+                "characteristic",
+                concrete_view=CharacteristicDetailView(
+                    UpdateCharacteristicDataValidator(),
+                    self.__characteristic_service,
+                    CharacteristicSerializer,
+                ),
+                middlewares=middlewares,
+            ),
+            methods=["GET", "PUT", "DELETE"],
+        )
+        self.flask_app.add_url_rule(
+            "/api/characteristic_values",
+            view_func=AbstractView.as_view(
+                "characteristic_values",
+                concrete_view=CharacteristicValueListView(
+                    CreateCharacteristicValueDataValidator(),
+                    self.__characteristic_value_service,
+                    CharacteristicValueSerializer,
+                ),
+                middlewares=middlewares,
+            ),
+            methods=["GET", "POST"],
+        ),
+        self.flask_app.add_url_rule(
+            "/api/characteristic_values/<int:characteristic_value_id>",
+            view_func=AbstractView.as_view(
+                "characteristic_value",
+                concrete_view=CharacteristicValueDetailView(
+                    UpdateCharacteristicValueDataValidator(),
+                    self.__characteristic_value_service,
+                    CharacteristicValueSerializer,
+                ),
+                middlewares=middlewares,
+            ),
+            methods=["GET", "PUT", "DELETE"],
         )
         self.flask_app.add_url_rule(
             "/api/feature_types",

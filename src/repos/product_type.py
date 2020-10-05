@@ -3,7 +3,7 @@ from fileinput import FileInput
 from typing import Dict, List
 
 from sqlalchemy.orm.session import Session as SQLAlchemySession
-from sqlalchemy import and_, or_, select, func
+from sqlalchemy import and_, select, func
 
 from src.models import (
     ProductType,
@@ -14,6 +14,7 @@ from src.models import (
     ProductTypeInstagramLink,
     FeatureType,
     Product,
+    CharacteristicValue,
 )
 from src.repos.base import NonDeletableRepo, set_intl_texts, with_session
 from src.storage.base import Storage
@@ -45,6 +46,7 @@ class ProductTypeRepo(NonDeletableRepo):
         image: FileInput,
         categories: List[Category],
         feature_types: List[FeatureType],
+        characteristic_values: List[CharacteristicValue],
         session: SQLAlchemySession = None,
     ):
         product_type = ProductType()
@@ -68,9 +70,8 @@ class ProductTypeRepo(NonDeletableRepo):
 
         set_instagram_links(product_type, instagram_links)
 
-        for feature_type in feature_types:
-            product_type.feature_types.append(feature_type)
-
+        product_type.feature_types = feature_types
+        product_type.characteristic_values = characteristic_values
         product_type.categories = categories
         product_type.image = self.__file_storage.save_file(image)
 
@@ -93,6 +94,7 @@ class ProductTypeRepo(NonDeletableRepo):
         image: FileInput,
         categories: List[Category],
         feature_types: List[FeatureType],
+        characteristic_values: List[CharacteristicValue],
         session: SQLAlchemySession = None,
     ):
         product_type = self.get_by_id(id_, session=session)
@@ -116,6 +118,7 @@ class ProductTypeRepo(NonDeletableRepo):
         set_instagram_links(product_type, instagram_links)
 
         product_type.feature_types = feature_types
+        product_type.characteristic_values = characteristic_values
         product_type.slug = self.get_unique_slug(product_type, session=session)
         product_type.categories = categories
 
