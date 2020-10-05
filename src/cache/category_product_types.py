@@ -28,14 +28,4 @@ class CategoryProductTypesCache:
     def make_cache_key(self, category_slug):
         from flask import request
 
-        return (
-            self.__prefix
-            + "_slug_"
-            + category_slug
-            + "_page_"
-            + request.args.get("page", "None")
-            + "_limit_"
-            + request.args.get("limit", "None")
-            + "_sort_by_"
-            + request.args.get("sort_by", "None")
-        )
+        return self.__prefix + category_slug + str(request.query_string)

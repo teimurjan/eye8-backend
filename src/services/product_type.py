@@ -1,3 +1,4 @@
+from typing import List
 from src.repos.characteristic_value import CharacteristicValueRepo
 from src.validation_rules.product_type.create import CreateProductTypeData
 from src.validation_rules.product_type.update import UpdateProductTypeData
@@ -120,6 +121,7 @@ class ProductTypeService:
         category_slug: str,
         sorting_type: ProductTypeSortingType,
         available: bool = False,
+        characteristic_values_ids: List[int] = None,
         offset: int = None,
         limit: int = None,
     ):
@@ -133,6 +135,7 @@ class ProductTypeService:
                 available=available,
                 category_ids=category_ids,
                 sorting_type=sorting_type,
+                characteristic_values_ids=characteristic_values_ids,
                 offset=offset,
                 limit=limit,
                 session=s,

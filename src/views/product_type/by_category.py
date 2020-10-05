@@ -20,6 +20,12 @@ class ProductTypeByCategoryView(PaginatableView):
         serialize_products = request.args.get("products") == "1"
         available = request.args.get("available") == "1"
 
+        characteristic_values_ids = (
+            [int(id) for id in request.args.getlist("characteristics")]
+            if request.args.get("characteristics") is not None
+            else None
+        )
+
         meta = None
         product_types = []
 
@@ -28,6 +34,7 @@ class ProductTypeByCategoryView(PaginatableView):
                 category_slug,
                 sorting_type,
                 available=available,
+                characteristic_values_ids=characteristic_values_ids,
                 offset=pagination_data["offset"],
                 limit=pagination_data["limit"],
             )
@@ -36,7 +43,10 @@ class ProductTypeByCategoryView(PaginatableView):
             )
         else:
             product_types, count = self._service.get_all_by_category(
-                category_slug, sorting_type, available=available,
+                category_slug,
+                sorting_type,
+                available=available,
+                characteristic_values_ids=characteristic_values_ids,
             )
 
         serialized_product_types = [

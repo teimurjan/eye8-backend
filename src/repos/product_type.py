@@ -141,6 +141,7 @@ class ProductTypeRepo(NonDeletableRepo):
         self,
         category_ids: List[int] = None,
         sorting_type: ProductTypeSortingType = ProductTypeSortingType.DEFAULT,
+        characteristic_values_ids: List[int] = None,
         offset: int = None,
         limit: int = None,
         available: bool = False,
@@ -175,10 +176,19 @@ class ProductTypeRepo(NonDeletableRepo):
             and_(Product.quantity > 0 if available else True,)
         )
 
+        characteristic_values_filter = (
+            ProductType.characteristic_values.any(
+                CharacteristicValue.id.in_(characteristic_values_ids)
+            )
+            if characteristic_values_ids is not None
+            else True
+        )
+
         q = (
             self.get_non_deleted_query(session=session)
             .filter(categories_filter)
             .filter(products_filter)
+            .filter(characteristic_values_filter)
             .order_by(*q_params["order_by"])
         )
 
