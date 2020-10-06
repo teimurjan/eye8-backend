@@ -52,10 +52,11 @@ class OrderRepo(NonDeletableRepo):
         order.user_name = user_name
         order.user_phone_number = user_phone_number
         order.user_address = user_address
-        order.promo_code_value = promo_code.value
-        order.promo_code_discount = promo_code.discount
-        order.promo_code_amount = promo_code.amount
-        order.promo_code_products = promo_code.products
+        if promo_code is not None:
+            order.promo_code_value = promo_code.value
+            order.promo_code_discount = promo_code.discount
+            order.promo_code_amount = promo_code.amount
+            order.promo_code_products = promo_code.products
 
         order_items = []
         for item in items:
@@ -93,7 +94,11 @@ class OrderRepo(NonDeletableRepo):
         order.user_phone_number = user_phone_number
         order.user_address = user_address
         order.status = status
-        order.promo_code = promo_code
+        if promo_code is not None:
+            order.promo_code_value = promo_code.value
+            order.promo_code_discount = promo_code.discount
+            order.promo_code_amount = promo_code.amount
+            order.promo_code_products = promo_code.products
 
         new_order_items = []
         for item in items:
