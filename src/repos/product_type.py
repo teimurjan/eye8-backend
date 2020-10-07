@@ -3,7 +3,7 @@ from fileinput import FileInput
 from typing import Dict, List
 
 from sqlalchemy.orm.session import Session as SQLAlchemySession
-from sqlalchemy import and_, select, func
+from sqlalchemy import select, func
 
 from src.models import (
     ProductType,
@@ -172,8 +172,8 @@ class ProductTypeRepo(NonDeletableRepo):
             if category_ids is not None
             else True
         )
-        products_filter = ProductType.products.any(
-            and_(Product.quantity > 0 if available else True,)
+        products_filter = (
+            ProductType.products.any(Product.quantity > 0) if available else True
         )
 
         characteristic_values_filter = (
