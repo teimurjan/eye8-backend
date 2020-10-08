@@ -16,6 +16,7 @@ ProductTypeXCharacteristicValueTable = Table(
         Integer,
         ForeignKey("characteristic_value.id"),
         primary_key=True,
+        index=True,
     ),
 )
 
@@ -29,7 +30,9 @@ class CharacteristicValue(BaseModel):
         lazy="joined",
         cascade="all, delete, delete-orphan",
     )
-    characteristic_id = Column(Integer, ForeignKey("characteristic.id"), nullable=False)
+    characteristic_id = Column(
+        Integer, ForeignKey("characteristic.id"), nullable=False, index=True
+    )
     characteristic = orm.relationship("Characteristic", lazy="joined")
     product_types = orm.relationship(
         "ProductType",

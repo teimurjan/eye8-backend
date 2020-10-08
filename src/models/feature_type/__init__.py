@@ -11,7 +11,13 @@ ProductTypeXFeatureTypeTable = Table(
         primary_key=True,
         index=True,
     ),
-    Column("feature_type_id", Integer, ForeignKey("feature_type.id"), primary_key=True),
+    Column(
+        "feature_type_id",
+        Integer,
+        ForeignKey("feature_type.id"),
+        primary_key=True,
+        index=True,
+    ),
 )
 
 

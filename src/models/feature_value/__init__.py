@@ -8,7 +8,11 @@ ProductXFeatureValueTable = Table(
         "product_id", Integer, ForeignKey("product.id"), primary_key=True, index=True
     ),
     Column(
-        "feature_value_id", Integer, ForeignKey("feature_value.id"), primary_key=True
+        "feature_value_id",
+        Integer,
+        ForeignKey("feature_value.id"),
+        primary_key=True,
+        index=True,
     ),
 )
 
@@ -22,7 +26,9 @@ class FeatureValue(BaseModel):
         lazy="joined",
         cascade="all, delete, delete-orphan",
     )
-    feature_type_id = Column(Integer, ForeignKey("feature_type.id"), nullable=False)
+    feature_type_id = Column(
+        Integer, ForeignKey("feature_type.id"), nullable=False, index=True
+    )
     feature_type = orm.relationship("FeatureType", lazy="joined")
     products = orm.relationship(
         "Product",

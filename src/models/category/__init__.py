@@ -11,7 +11,7 @@ class Category(BaseModel):
         lazy="joined",
         cascade="all, delete, delete-orphan",
     )
-    parent_category_id = Column(Integer, ForeignKey("category.id"), nullable=True)
+    parent_category_id = Column(Integer, ForeignKey("category.id"), nullable=True, index=True)
     slug = Column(String(255), nullable=False, unique=True)
 
     def __getitem__(self, key):

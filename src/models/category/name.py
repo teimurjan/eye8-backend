@@ -8,4 +8,4 @@ class CategoryName(IntlText):
     __table_args__ = (Index("ix_category_name_value", "value",),)
 
     value = Column(String(50), nullable=False)
-    category_id = Column(Integer, ForeignKey("category.id"), nullable=False)
+    category_id = Column(Integer, ForeignKey("category.id"), nullable=False, index=True)
