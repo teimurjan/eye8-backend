@@ -192,7 +192,7 @@ class ProductTypeRepo(NonDeletableRepo):
             .order_by(*q_params["order_by"])
         )
 
-        return (q.offset(offset).limit(limit).all(), q.count())
+        return q.offset(offset).limit(limit).all(), q.count()
 
     @with_session
     def search(
@@ -251,4 +251,3 @@ class ProductTypeRepo(NonDeletableRepo):
 
     class DoesNotExist(Exception):
         pass
-

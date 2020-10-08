@@ -67,7 +67,7 @@ class ProductType(NonDeletableModel):
     categories = orm.relationship(
         "Category",
         secondary=ProductTypeXCategoryTable,
-        lazy="joined",
+        lazy="subquery",
         backref=orm.backref("product_types"),
     )
     slug = Column(String(255), nullable=False, unique=True)
