@@ -14,7 +14,7 @@ class UpdateCategoryDataValidator(DataValidator[UpdateCategoryData]):
             {
                 "names": {
                     "type": "dict",
-                    "keyschema": {"regex": r"^\d+$"},
+                    "keyschema": {"regex": r"^[a-z]+$"},
                     "valueschema": {
                         "type": "string",
                         "required": True,

@@ -20,7 +20,7 @@ class CreateProductTypeDataValidator(DataValidator[CreateProductTypeData]):
             {
                 "names": {
                     "type": "dict",
-                    "keyschema": {"regex": r"^\d+$"},
+                    "keyschema": {"regex": r"^[a-z]+$"},
                     "valueschema": {
                         "type": "string",
                         "required": True,
@@ -33,7 +33,7 @@ class CreateProductTypeDataValidator(DataValidator[CreateProductTypeData]):
                 },
                 "descriptions": {
                     "type": "dict",
-                    "keyschema": {"regex": r"^\d+$"},
+                    "keyschema": {"regex": r"^[a-z]+$"},
                     "valueschema": {
                         "type": "string",
                         "required": True,
@@ -45,7 +45,7 @@ class CreateProductTypeDataValidator(DataValidator[CreateProductTypeData]):
                 },
                 "short_descriptions": {
                     "type": "dict",
-                    "keyschema": {"regex": r"^\d+$"},
+                    "keyschema": {"regex": r"^[a-z]+$"},
                     "valueschema": {
                         "type": "string",
                         "required": True,

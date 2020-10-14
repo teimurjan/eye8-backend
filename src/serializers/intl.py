@@ -17,12 +17,12 @@ class IntlSerializer(Serializer):
 
     def _get_intl_field_from(self, all_fields: List[IntlText]):
         if self._language is None:
-            return {field.language_id: field.value for field in all_fields}
+            return {field.language.name: field.value for field in all_fields}
 
         values = [
             field.value
             for field in all_fields
-            if field.language_id == self._language.id
+            if field.language.id == self._language.id
         ]
         return "" if len(values) == 0 else values[0]
 

@@ -21,7 +21,7 @@ class CreateBannerDataValidator(DataValidator[CreateBannerData]):
             {
                 "texts": {
                     "type": "dict",
-                    "keyschema": {"regex": r"^\d+$"},
+                    "keyschema": {"regex": r"^[a-z]+$"},
                     "valueschema": {
                         "type": "string",
                         "required": True,
@@ -36,7 +36,7 @@ class CreateBannerDataValidator(DataValidator[CreateBannerData]):
                 "text_color": {"required": False, "nullable": True},
                 "link_texts": {
                     "type": "dict",
-                    "keyschema": {"regex": r"^\d+$"},
+                    "keyschema": {"regex": r"^[a-z]+$"},
                     "valueschema": {
                         "type": "string",
                         "required": True,

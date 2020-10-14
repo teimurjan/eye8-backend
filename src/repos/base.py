@@ -172,10 +172,10 @@ def set_intl_texts(
     session: SQLAlchemySession = None,
 ):
     new_texts = []
-    for language_id, value in texts.items():
+    for name, value in texts.items():
         text = intl_text_model_cls()
         text.value = value
-        language = session.query(Language).get(int(language_id))
+        language = session.query(Language).filter(Language.name == name).first()
         setattr(text, "language", language)
         new_texts.append(text)
 

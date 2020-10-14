@@ -35,7 +35,6 @@ from src.serializers.characteristic import CharacteristicSerializer
 from src.serializers.characteristic_value import CharacteristicValueSerializer
 from src.serializers.feature_type import FeatureTypeSerializer
 from src.serializers.feature_value import FeatureValueSerializer
-from src.serializers.language import LanguageSerializer
 from src.serializers.order import OrderSerializer
 from src.serializers.product import ProductSerializer
 from src.serializers.product_type import ProductTypeSerializer
@@ -103,7 +102,6 @@ from src.views.feature_type.detail import FeatureTypeDetailView
 from src.views.feature_type.list import FeatureTypeListView
 from src.views.feature_value.detail import FeatureValueDetailView
 from src.views.feature_value.list import FeatureValueListView
-from src.views.language.list import LanguageListView
 from src.views.order.by_user import OrderByUserView
 from src.views.order.detail import OrderDetailView
 from src.views.order.list import OrderListView
@@ -511,19 +509,6 @@ class App:
                 on_respond=category_product_types_cache.get_invalidate_hook(),
             ),
             methods=["GET", "PUT", "DELETE"],
-        )
-        self.flask_app.add_url_rule(
-            "/api/languages",
-            view_func=self.cache.cached(60 * 60 * 24, response_filter=response_filter)(
-                AbstractView.as_view(
-                    "languages",
-                    concrete_view=LanguageListView(
-                        self.__language_service, LanguageSerializer
-                    ),
-                    middlewares=middlewares,
-                )
-            ),
-            methods=["GET"],
         )
         self.flask_app.add_url_rule(
             "/api/banners",

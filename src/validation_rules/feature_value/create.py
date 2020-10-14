@@ -14,7 +14,7 @@ class CreateFeatureValueDataValidator(DataValidator[CreateFeatureValueData]):
             {
                 "names": {
                     "type": "dict",
-                    "keyschema": {"regex": r"^\d+$"},
+                    "keyschema": {"regex": r"^[a-z]+$"},
                     "valueschema": {
                         "type": "string",
                         "required": True,
