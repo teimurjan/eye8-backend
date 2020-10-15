@@ -24,10 +24,10 @@ class FeatureTypeDetailView(ValidatableView[UpdateFeatureTypeData]):
     def get(self, request: Request, feature_type_id: int):
         try:
             feature_type = self._service.get_one(feature_type_id)
-            should_get_raw_intl_field = request.args.get("raw_intl") == "1"
+            raw_intl = request.args.get("raw_intl") == "1"
             serialized_feature_type = (
                 self._serializer_cls(feature_type)
-                .in_language(None if should_get_raw_intl_field else request.language)
+                .in_language(None if raw_intl else request.language)
                 .serialize()
             )
             return {"data": serialized_feature_type}, OK_CODE

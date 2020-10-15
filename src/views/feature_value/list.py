@@ -37,11 +37,11 @@ class FeatureValueListView(ValidatableView[CreateFeatureValueData], PaginatableV
         else:
             feature_values, _ = self._service.get_all()
 
-        should_get_raw_intl_field = request.args.get("raw_intl") == "1"
+        raw_intl = request.args.get("raw_intl") == "1"
 
         serialized_feature_values = [
             self._serializer_cls(feature_value)
-            .in_language(None if should_get_raw_intl_field else request.language)
+            .in_language(None if raw_intl else request.language)
             .with_serialized_feature_type()
             .serialize()
             for feature_value in feature_values

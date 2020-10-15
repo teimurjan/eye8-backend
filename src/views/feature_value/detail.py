@@ -26,10 +26,10 @@ class FeatureValueDetailView(ValidatableView[UpdateFeatureValueData]):
     def get(self, request: Request, feature_value_id: int):
         try:
             feature_value = self._service.get_one(feature_value_id)
-            should_get_raw_intl_field = request.args.get("raw_intl") == "1"
+            raw_intl = request.args.get("raw_intl") == "1"
             serialized_feature_value = (
                 self._serializer_cls(feature_value)
-                .in_language(None if should_get_raw_intl_field else request.language)
+                .in_language(None if raw_intl else request.language)
                 .with_serialized_feature_type()
                 .serialize()
             )

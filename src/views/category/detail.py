@@ -25,10 +25,10 @@ class CategoryDetailView(ValidatableView[UpdateCategoryData]):
     def get(self, request: Request, category_id: int):
         try:
             category = self._service.get_one(category_id)
-            should_get_raw_intl_field = request.args.get("raw_intl") == "1"
+            raw_intl = request.args.get("raw_intl") == "1"
             serialized_category = (
                 self._serializer_cls(category)
-                .in_language(None if should_get_raw_intl_field else request.language)
+                .in_language(None if raw_intl else request.language)
                 .serialize()
             )
             return {"data": serialized_category}, OK_CODE

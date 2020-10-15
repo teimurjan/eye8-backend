@@ -24,10 +24,10 @@ class CharacteristicDetailView(ValidatableView[UpdateCharacteristicData]):
     def get(self, request: Request, characteristic_id: int):
         try:
             characteristic = self._service.get_one(characteristic_id)
-            should_get_raw_intl_field = request.args.get("raw_intl") == "1"
+            raw_intl = request.args.get("raw_intl") == "1"
             serialized_characteristic = (
                 self._serializer_cls(characteristic)
-                .in_language(None if should_get_raw_intl_field else request.language)
+                .in_language(None if raw_intl else request.language)
                 .serialize()
             )
             return {"data": serialized_characteristic}, OK_CODE

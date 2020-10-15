@@ -107,13 +107,18 @@ class ProductTypeService:
 
     def get_all(
         self,
-        available: bool = False,
+        available=False,
         sorting_type: ProductTypeSortingType = None,
+        deleted=False,
         offset: int = None,
         limit: int = None,
     ):
         return self._repo.get_all(
-            available=available, offset=offset, limit=limit, sorting_type=sorting_type,
+            available=available,
+            deleted=deleted,
+            offset=offset,
+            limit=limit,
+            sorting_type=sorting_type,
         )
 
     def get_all_by_category(
@@ -142,9 +147,9 @@ class ProductTypeService:
             )
             return product_types, count
 
-    def get_one(self, id_: int):
+    def get_one(self, id_: int, deleted=False):
         try:
-            return self._repo.get_by_id(id_)
+            return self._repo.get_by_id(id_, deleted=deleted)
         except self._repo.DoesNotExist:
             raise self.ProductTypeNotFound()
 
@@ -162,6 +167,16 @@ class ProductTypeService:
                 raise self.ProductTypeWithProductsIsUntouchable()
 
             self._repo.delete(id_)
+        except self._repo.DoesNotExist:
+            raise self.ProductTypeNotFound()
+
+    @allow_roles(["admin", "manager"])
+    def delete_forever(self, id_: int, *args, **kwargs):
+        try:
+            if self._product_repo.has_with_product_type(id_, non_deleted=False):
+                raise self.ProductTypeWithProductsIsUntouchable()
+
+            self._repo.delete_forever(id_)
         except self._repo.DoesNotExist:
             raise self.ProductTypeNotFound()
 

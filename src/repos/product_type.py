@@ -144,7 +144,8 @@ class ProductTypeRepo(NonDeletableRepo):
         characteristic_values_ids: List[int] = None,
         offset: int = None,
         limit: int = None,
-        available: bool = False,
+        available=False,
+        deleted=False,
         session: SQLAlchemySession = None,
     ):
         q_params = {
@@ -185,8 +186,12 @@ class ProductTypeRepo(NonDeletableRepo):
         )
 
         q = (
-            self.get_non_deleted_query(session=session)
-            .filter(categories_filter)
+            self.get_deleted_query(session=session)
+            if deleted
+            else self.get_non_deleted_query(session=session)
+        )
+        q = (
+            q.filter(categories_filter)
             .filter(products_filter)
             .filter(characteristic_values_filter)
             .order_by(*q_params["order_by"])

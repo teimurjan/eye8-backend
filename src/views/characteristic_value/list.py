@@ -39,11 +39,11 @@ class CharacteristicValueListView(
         else:
             characteristic_values, _ = self._service.get_all()
 
-        should_get_raw_intl_field = request.args.get("raw_intl") == "1"
+        raw_intl = request.args.get("raw_intl") == "1"
 
         serialized_characteristic_values = [
             self._serializer_cls(characteristic_value)
-            .in_language(None if should_get_raw_intl_field else request.language)
+            .in_language(None if raw_intl else request.language)
             .with_serialized_characteristic()
             .serialize()
             for characteristic_value in characteristic_values

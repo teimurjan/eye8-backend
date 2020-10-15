@@ -92,14 +92,15 @@ class ProductRepo(NonDeletableRepo):
 
     @with_session
     def has_with_product_type(
-        self, product_type_id: int, session: SQLAlchemySession = None
+        self, product_type_id: int, non_deleted=True, session: SQLAlchemySession = None
     ):
-        return (
+        q = (
             self.get_non_deleted_query(session=session)
-            .filter(Product.product_type_id == product_type_id)
-            .count()
-            > 0
+            if non_deleted
+            else self.get_query(session=session)
         )
+
+        return q.filter(Product.product_type_id == product_type_id).count() > 0
 
     @with_session
     def get_all(

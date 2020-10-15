@@ -25,10 +25,10 @@ class BannerDetailView(ValidatableView[UpdateBannerData]):
     def get(self, request: Request, banner_id: int):
         try:
             banner = self._service.get_one(banner_id)
-            should_get_raw_intl_field = request.args.get("raw_intl") == "1"
+            raw_intl = request.args.get("raw_intl") == "1"
             serialized_banner = (
                 self._serializer_cls(banner)
-                .in_language(None if should_get_raw_intl_field else request.language)
+                .in_language(None if raw_intl else request.language)
                 .serialize()
             )
             return {"data": serialized_banner}, OK_CODE

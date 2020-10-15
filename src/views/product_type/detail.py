@@ -29,13 +29,13 @@ class ProductTypeDetailView(ValidatableView[UpdateProductTypeData]):
 
     def get(self, request: Request, product_type_id: int):
         try:
-            product_type = self._service.get_one(product_type_id)
-
-            should_get_raw_intl_field = request.args.get("raw_intl") == "1"
+            deleted = request.args.get("deleted") == "1"
+            raw_intl = request.args.get("raw_intl") == "1"
+            product_type = self._service.get_one(product_type_id, deleted=deleted)
 
             serialized_product_type = (
                 self._serializer_cls(product_type)
-                .in_language(None if should_get_raw_intl_field else request.language)
+                .in_language(None if raw_intl else request.language)
                 .with_serialized_categories()
                 .serialize()
             )
@@ -69,7 +69,13 @@ class ProductTypeDetailView(ValidatableView[UpdateProductTypeData]):
 
     def delete(self, request: Request, product_type_id: int):
         try:
-            self._service.delete(product_type_id, user=request.user)
+            forever = request.args.get("forever") == "1"
+
+            if forever:
+                self._service.delete_forever(product_type_id, user=request.user)
+            else:
+                self._service.delete(product_type_id, user=request.user)
+
             return {}, OK_CODE
         except self._service.ProductTypeNotFound:
             return {}, NOT_FOUND_CODE
@@ -78,7 +84,9 @@ class ProductTypeDetailView(ValidatableView[UpdateProductTypeData]):
 
     def head(self, request: Request, product_type_id: int):
         try:
-            self._service.get_one(product_type_id)
+            deleted = request.args.get("deleted") == "1"
+            self._service.get_one(product_type_id, deleted=deleted)
+
             return {}, OK_CODE
         except self._service.ProductTypeNotFound:
             return {}, NOT_FOUND_CODE
