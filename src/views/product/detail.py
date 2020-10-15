@@ -51,7 +51,8 @@ class ProductDetailView(ValidatableView[UpdateProductData]):
             valid_data = self._validate(
                 data={
                     **parse_json_from_form_data(request.form),
-                    "images": request.files.getlist("images"),
+                    "images": request.files.getlist("images")
+                    or request.form.getlist("images"),
                 }
             )
             product = self._service.update(product_id, valid_data, user=request.user)

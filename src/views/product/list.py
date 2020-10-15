@@ -25,7 +25,7 @@ class ProductListView(ValidatableView[CreateProductData], PaginatableView):
 
     def get(self, request: Request):
         pagination_data = self._get_pagination_data(request)
-        available = request.args.get("available") == '1'
+        available = request.args.get("available") == "1"
 
         meta = None
         products = []
