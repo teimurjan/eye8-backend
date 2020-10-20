@@ -1,4 +1,5 @@
 import os
+from src.cache.search_product_types import SearchProductTypesCache
 from src.repos.characteristic_value import CharacteristicValueRepo
 
 import sqlalchemy as db
@@ -112,12 +113,12 @@ from src.views.product_type.by_category import ProductTypeByCategoryView
 from src.views.product_type.detail import ProductTypeDetailView
 from src.views.product_type.list import ProductTypeListView
 from src.views.product_type.slug import ProductTypeSlugView
+from src.views.product_type.search import ProductTypeSearchView
 from src.views.promo_code.detail import PromoCodeDetailView
 from src.views.promo_code.list import PromoCodeListView
 from src.views.promo_code.value import PromoCodeValueView
 from src.views.refresh_token import RefreshTokenView
 from src.views.registration import RegistrationView
-from src.views.search import SearchView
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 
@@ -215,6 +216,7 @@ class App:
         middlewares = [authorize_middleware, language_middleware]
 
         category_product_types_cache = CategoryProductTypesCache(self.cache)
+        search_product_types_cache = SearchProductTypesCache(self.cache)
 
         self.flask_app.add_url_rule(
             "/api/auth/login",
@@ -270,7 +272,7 @@ class App:
                     CategorySerializer,
                 ),
                 middlewares=middlewares,
-                on_respond=category_product_types_cache.get_invalidate_hook(),
+                on_respond_hooks=[category_product_types_cache.get_invalidate_hook()],
             ),
             methods=["GET", "POST"],
         )
@@ -284,7 +286,7 @@ class App:
                     CategorySerializer,
                 ),
                 middlewares=middlewares,
-                on_respond=category_product_types_cache.get_invalidate_hook(),
+                on_respond_hooks=[category_product_types_cache.get_invalidate_hook()],
             ),
             methods=["GET", "PUT", "DELETE"],
         )
@@ -317,16 +319,19 @@ class App:
             methods=["GET"],
         )
         self.flask_app.add_url_rule(
-            "/api/search/<path:query>",
-            view_func=AbstractView.as_view(
-                "search",
-                concrete_view=SearchView(
-                    self.__category_service,
-                    self.__product_type_service,
-                    CategorySerializer,
-                    ProductTypeSerializer,
-                ),
-                middlewares=middlewares,
+            "/api/product_types/search/<path:query>",
+            view_func=self.cache.cached(
+                60 * 60,
+                response_filter=response_filter,
+                make_cache_key=search_product_types_cache.make_cache_key,
+            )(
+                AbstractView.as_view(
+                    "search",
+                    concrete_view=ProductTypeSearchView(
+                        self.__product_type_service, ProductTypeSerializer,
+                    ),
+                    middlewares=middlewares,
+                )
             ),
             methods=["GET"],
         )
@@ -492,7 +497,10 @@ class App:
                     ProductTypeSerializer,
                 ),
                 middlewares=middlewares,
-                on_respond=category_product_types_cache.get_invalidate_hook(),
+                on_respond_hooks=[
+                    category_product_types_cache.get_invalidate_hook(),
+                    search_product_types_cache.get_invalidate_hook(),
+                ],
             ),
             methods=["GET", "POST"],
         )
@@ -506,7 +514,10 @@ class App:
                     ProductTypeSerializer,
                 ),
                 middlewares=middlewares,
-                on_respond=category_product_types_cache.get_invalidate_hook(),
+                on_respond_hooks=[
+                    category_product_types_cache.get_invalidate_hook(),
+                    search_product_types_cache.get_invalidate_hook(),
+                ],
             ),
             methods=["GET", "PUT", "DELETE"],
         )

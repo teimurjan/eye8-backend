@@ -125,7 +125,7 @@ class ProductTypeService:
         self,
         category_slug: str,
         sorting_type: ProductTypeSortingType,
-        available: bool = False,
+        available=False,
         characteristic_values_ids: List[int] = None,
         offset: int = None,
         limit: int = None,
@@ -181,9 +181,14 @@ class ProductTypeService:
             raise self.ProductTypeNotFound()
 
     def search(
-        self, query: str, available: bool = False,
+        self,
+        query: str,
+        available=False,
+        deleted=False,
+        offset: int = None,
+        limit: int = None,
     ):
-        return self._repo.search(query, available)
+        return self._repo.search(query=query, available=available, deleted=deleted)
 
     class ProductTypeNotFound(Exception):
         pass

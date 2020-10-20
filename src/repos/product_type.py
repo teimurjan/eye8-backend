@@ -173,9 +173,6 @@ class ProductTypeRepo(NonDeletableRepo):
             if category_ids is not None
             else True
         )
-        products_filter = (
-            ProductType.products.any(Product.quantity > 0) if available else True
-        )
 
         characteristic_values_filter = (
             ProductType.characteristic_values.any(
@@ -192,7 +189,7 @@ class ProductTypeRepo(NonDeletableRepo):
         )
         q = (
             q.filter(categories_filter)
-            .filter(products_filter)
+            .filter(self.__get_availability_filter() if available else True)
             .filter(characteristic_values_filter)
             .order_by(*q_params["order_by"])
         )
@@ -201,7 +198,13 @@ class ProductTypeRepo(NonDeletableRepo):
 
     @with_session
     def search(
-        self, query: str, available: bool = False, session: SQLAlchemySession = None
+        self,
+        query: str,
+        available=False,
+        deleted=False,
+        offset: int = None,
+        limit: int = None,
+        session: SQLAlchemySession = None,
     ):
         search_treshold = 0.1
         query = select([ProductTypeName.product_type_id]).where(
@@ -209,13 +212,20 @@ class ProductTypeRepo(NonDeletableRepo):
         )
         ids = [row[0] for row in session.connection().execute(query)]
 
-        return (
-            self.get_non_deleted_query()
-            .filter(ProductType.id.in_(ids))
-            .filter(
-                ProductType.products.any(Product.quantity > 0) if available else True
+        q = (
+            (
+                self.get_deleted_query(session=session)
+                if deleted
+                else self.get_non_deleted_query(session=session)
             )
+            .filter(ProductType.id.in_(ids))
+            .filter(self.__get_availability_filter() if available else True)
         )
+
+        return q.offset(offset).limit(limit).all(), q.count()
+
+    def __get_availability_filter(self):
+        return ProductType.products.any(Product.quantity > 0)
 
     @with_session
     def has_with_category(self, id_: int, session: SQLAlchemySession = None):
