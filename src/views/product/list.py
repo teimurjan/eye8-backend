@@ -30,6 +30,8 @@ class ProductListView(ValidatableView[CreateProductData], PaginatableView):
         meta = None
         products = []
 
+        deleted = request.args.get("deleted") == "1"
+
         if request.args.get("ids") is not None:
             ids = request.args.getlist("ids", type=int)
             products = self._service.get_by_ids(ids)
@@ -38,12 +40,13 @@ class ProductListView(ValidatableView[CreateProductData], PaginatableView):
                 available=available,
                 offset=pagination_data["offset"],
                 limit=pagination_data["limit"],
+                deleted=deleted,
             )
             meta = self._get_meta(
                 count, pagination_data["page"], pagination_data["limit"]
             )
         else:
-            products, _ = self._service.get_all(available=available)
+            products, _ = self._service.get_all(available=available, deleted=deleted)
 
         serialized_products = [
             self._serializer_cls(product)

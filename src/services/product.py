@@ -85,13 +85,15 @@ class ProductService:
     def get_all(
         self,
         product_type_id: int = None,
-        available: bool = False,
+        available=False,
+        deleted=False,
         offset: int = None,
         limit: int = None,
     ):
         return self._repo.get_all(
             available=available,
             product_type_id=product_type_id,
+            deleted=deleted,
             offset=offset,
             limit=limit,
         )
@@ -99,16 +101,16 @@ class ProductService:
     def get_by_ids(self, ids: List[int]):
         return self._repo.filter_by_ids(ids)
 
-    def get_one(self, id_: int):
+    def get_one(self, id_: int, deleted=False):
         try:
-            return self._repo.get_by_id(id_)
+            return self._repo.get_by_id(id_, deleted=deleted)
         except self._repo.DoesNotExist:
             raise self.ProductNotFound()
 
     @allow_roles(["admin", "manager"])
-    def delete(self, id_: int, *args, **kwargs):
+    def delete(self, id_: int, forever=False, *args, **kwargs):
         try:
-            return self._repo.delete(id_)
+            return self._repo.delete(id_, forever=forever)
         except self._repo.DoesNotExist:
             raise self.ProductNotFound()
 

@@ -28,7 +28,8 @@ class ProductDetailView(ValidatableView[UpdateProductData]):
 
     def get(self, request: Request, product_id: int):
         try:
-            product = self._service.get_one(product_id)
+            deleted = request.args.get("deleted") == "1"
+            product = self._service.get_one(product_id, deleted=deleted)
             serialized_product = (
                 self._serializer_cls(product)
                 .in_language(request.language)
@@ -41,7 +42,8 @@ class ProductDetailView(ValidatableView[UpdateProductData]):
 
     def head(self, request: Request, product_id: int):
         try:
-            self._service.get_one(product_id)
+            deleted = request.args.get("deleted") == "1"
+            self._service.get_one(product_id, deleted=deleted)
             return {}, OK_CODE
         except self._service.ProductNotFound:
             return {}, NOT_FOUND_CODE
@@ -72,7 +74,8 @@ class ProductDetailView(ValidatableView[UpdateProductData]):
 
     def delete(self, request: Request, product_id: int):
         try:
-            self._service.delete(product_id, user=request.user)
+            forever = request.args.get("forever") == "1"
+            self._service.delete(product_id, forever=forever, user=request.user)
             return {}, OK_CODE
         except self._service.ProductNotFound:
             return {}, NOT_FOUND_CODE
