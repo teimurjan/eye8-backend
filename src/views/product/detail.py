@@ -75,7 +75,12 @@ class ProductDetailView(ValidatableView[UpdateProductData]):
     def delete(self, request: Request, product_id: int):
         try:
             forever = request.args.get("forever") == "1"
-            self._service.delete(product_id, forever=forever, user=request.user)
+
+            if forever:
+                self._service.delete_forever(product_id, user=request.user)
+            else:
+                self._service.delete(product_id, user=request.user)
+
             return {}, OK_CODE
         except self._service.ProductNotFound:
             return {}, NOT_FOUND_CODE
