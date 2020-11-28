@@ -61,6 +61,7 @@ class ProductDetailView(ValidatableView[UpdateProductData]):
             serialized_product = (
                 self._serializer_cls(product)
                 .with_serialized_product_type()
+                .with_serialized_feature_values()
                 .serialize()
             )
             return {"data": serialized_product}, OK_CODE
