@@ -110,17 +110,16 @@ class ProductService:
     @allow_roles(["admin", "manager"])
     def delete(self, id_: int, *args, **kwargs):
         try:
-            return self._repo.delete(id_, forever=forever)
+            return self._repo.delete(id_)
         except self._repo.DoesNotExist:
             raise self.ProductNotFound()
 
     @allow_roles(["admin", "manager"])
     def delete_forever(self, id_: int, *args, **kwargs):
         try:
-            return self._repo.delete_forever(id_)
+            self._repo.delete_forever(id_)
         except self._repo.DoesNotExist:
             raise self.ProductNotFound()
-
     class ProductNotFound(Exception):
         pass
 

@@ -4,14 +4,14 @@ from typing import Dict, Optional, TypeVar
 T = TypeVar("T")
 
 
-def parse_json(s: str) -> T:
+def parse_json(s: str) -> Optional[dict]:
     try:
         return json.loads(s)
     except Exception:
         return None
 
 
-def parse_json_from_form_data(form_data: Dict[str, Optional[str]], key="json") -> T:
+def parse_json_from_form_data(form_data: Dict[str, Optional[str]], key="json") -> dict:
     json_str = form_data.get(key)
     if json_str is None:
         return {}
