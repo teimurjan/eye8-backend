@@ -162,6 +162,7 @@ class OrderService:
     def get_all(self, offset: int = None, limit: int = None, user: User = None):
         return self._repo.get_all(offset=offset, limit=limit), self._repo.count_all()
 
+    @allow_roles(["client", "admin", "manager"])
     def get_for_user(
         self, user_id, offset: int = None, limit: int = None, user: User = None
     ):
