@@ -7,5 +7,5 @@ class AccessRoleError(Exception):
     pass
 
 
-class NotAuthorizedError(Exception):
+class NotAuthenticatedError(Exception):
     pass

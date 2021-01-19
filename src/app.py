@@ -1,4 +1,6 @@
 import os
+from src.views.auth.auth_check import AuthCheckView
+from src.utils.request import Request
 from src.cache.search_product_types import SearchProductTypesCache
 from src.repos.characteristic_value import CharacteristicValueRepo
 
@@ -14,7 +16,7 @@ from flask_mail import Mail as FlaskMail
 from paths import APP_ROOT_PATH
 from src.abstract_view import AbstractView
 from src.mail import Mail
-from src.middleware.http.authorize import AuthorizeHttpMiddleware
+from src.middleware.http.authenticate import AuthenticateHttpMiddleware
 from src.middleware.http.language import LanguageHttpMiddleware
 from src.repos.banner import BannerRepo
 from src.repos.category import CategoryRepo
@@ -84,15 +86,14 @@ from src.validation_rules.product_type.create import CreateProductTypeDataValida
 from src.validation_rules.product_type.update import UpdateProductTypeDataValidator
 from src.validation_rules.promo_code.create import CreatePromoCodeDataValidator
 from src.validation_rules.promo_code.update import UpdatePromoCodeDataValidator
-from src.validation_rules.refresh_token import RefreshTokenDataValidator
 from src.validation_rules.registration import RegistrationDataValidator
-from src.views.authentication import AuthenticationView
+from src.views.auth.authentication import AuthenticationView
 from src.views.banner.detail import BannerDetailView
 from src.views.banner.list import BannerListView
 from src.views.category.detail import CategoryDetailView
 from src.views.category.list import CategoryListView
 from src.views.category.slug import CategorySlugView
-from src.views.confirm_registration import ConfirmRegistrationView
+from src.views.auth.confirm_registration import ConfirmRegistrationView
 from src.views.currency_rate.detail import CurrencyRateDetailView
 from src.views.currency_rate.list import CurrencyRateListView
 from src.views.characteristic.detail import CharacteristicDetailView
@@ -117,15 +118,18 @@ from src.views.product_type.search import ProductTypeSearchView
 from src.views.promo_code.detail import PromoCodeDetailView
 from src.views.promo_code.list import PromoCodeListView
 from src.views.promo_code.value import PromoCodeValueView
-from src.views.refresh_token import RefreshTokenView
-from src.views.registration import RegistrationView
+from src.views.auth.registration import RegistrationView
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 
 
+class CustomFlask(Flask):
+    request_class = Request
+
+
 class App:
     def __init__(self):
-        self.flask_app = Flask(__name__)
+        self.flask_app = CustomFlask(__name__)
         self.__init_config()
 
         if self.flask_app.config.get("SENTRY_DSN") is not None:
@@ -211,9 +215,9 @@ class App:
         )
 
     def __init_api_routes(self):
-        authorize_middleware = AuthorizeHttpMiddleware(self.__user_service)
+        authenticate_middleware = AuthenticateHttpMiddleware(self.__user_service)
         language_middleware = LanguageHttpMiddleware(self.__language_repo)
-        middlewares = [authorize_middleware, language_middleware]
+        middlewares = [authenticate_middleware, language_middleware]
 
         category_product_types_cache = CategoryProductTypesCache(self.cache)
         search_product_types_cache = SearchProductTypesCache(self.cache)
@@ -252,15 +256,13 @@ class App:
             methods=["POST"],
         )
         self.flask_app.add_url_rule(
-            "/api/auth/refresh",
+            "/api/auth/check",
             view_func=AbstractView.as_view(
-                "refresh_token",
-                concrete_view=RefreshTokenView(
-                    self.__user_service, RefreshTokenDataValidator()
-                ),
-                middlewares=[language_middleware],
+                "auth_check",
+                concrete_view=AuthCheckView(),
+                middlewares=middlewares,
             ),
-            methods=["POST"],
+            methods=["GET"],
         )
         self.flask_app.add_url_rule(
             "/api/categories",
@@ -692,7 +694,11 @@ class App:
         self.mail = Mail(flask_mail)
 
     def __init_cors(self):
-        CORS(self.flask_app, origins=self.flask_app.config["ALLOWED_ORIGINS"])
+        CORS(
+            self.flask_app,
+            origins=self.flask_app.config["ALLOWED_ORIGINS"],
+            supports_credentials=True,
+        )
 
     def __init_config(self):
         self.flask_app.config.from_object(

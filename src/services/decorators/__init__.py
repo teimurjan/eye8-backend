@@ -1,4 +1,4 @@
-from src.errors import AccessRoleError, NotAuthorizedError
+from src.errors import AccessRoleError, NotAuthenticatedError
 
 
 def allow_roles(allowed_roles):
@@ -6,7 +6,7 @@ def allow_roles(allowed_roles):
         def wrapper(self, *args, **kwargs):
             user = kwargs.get("user")
             if user is None:
-                raise NotAuthorizedError()
+                raise NotAuthenticatedError()
             if user.group.name not in allowed_roles:
                 raise AccessRoleError()
             return f(self, *args, **kwargs)

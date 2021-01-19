@@ -23,8 +23,9 @@ class AuthenticationView(ValidatableView[AuthenticationData]):
             valid_data = self._validate(request.get_json())
             access_token, refresh_token = self._user_service.authenticate(valid_data)
             return (
-                {"access_token": access_token, "refresh_token": refresh_token},
+                {"access_token": access_token},
                 OK_CODE,
+                {"refresh_token": refresh_token},
             )
         except self._user_service.AuthCredsInvalid:
             raise InvalidEntityFormat(
