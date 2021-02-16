@@ -17,7 +17,6 @@ class ProductTypeByCategoryView(PaginatableView):
     def get(self, request: Request, category_slug: str):
         pagination_data = self._get_pagination_data(request)
         sorting_type = get_sorting_type_from_request(request)
-        serialize_products = request.args.get("products") == "1"
         available = request.args.get("available") == "1"
 
         characteristic_values_ids = (
@@ -52,9 +51,10 @@ class ProductTypeByCategoryView(PaginatableView):
         serialized_product_types = [
             self._serializer_cls(product_type)
             .in_language(request.language)
-            .chain(
-                lambda s: s.with_serialized_products() if serialize_products else None
-            )
+            .with_serialized_categories()
+            .with_serialized_feature_types()
+            .with_serialized_characteristic_values()
+            .chain(lambda s: s.with_serialized_products())
             .serialize()
             for product_type in product_types
         ]

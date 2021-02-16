@@ -2,8 +2,9 @@
   "python.venvPath": "${workspaceFolder}/virtualenv",
   "python.formatting.provider": "black",
   "python.analysis.typeCheckingMode": "basic",
-  "python.analysis.openFilesOnly": false,
   "python.analysis.diagnosticSeverityOverrides": {
     "reportUnusedImport": "warning"
-  }
+  },
+  "ponicode.testSettings.testLocation.locationType": "Same folder as source file",
+  "ponicode.testSettings.testLocation.path": "{rootDir}/{filePath}/{fileName}.test.{ext}"
 }

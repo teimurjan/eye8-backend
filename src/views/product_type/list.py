@@ -43,7 +43,6 @@ class ProductTypeListView(ValidatableView[CreateProductTypeData], PaginatableVie
         sorting_type = get_sorting_type_from_request(request)
         only_fields = request.args.getlist("fields")
         available = request.args.get("available") == "1"
-        serialize_products = request.args.get("products") == "1"
         raw_intl = request.args.get("raw_intl") == "1"
         deleted = request.args.get("deleted") == "1"
 
@@ -68,9 +67,10 @@ class ProductTypeListView(ValidatableView[CreateProductTypeData], PaginatableVie
             self._serializer_cls(product_type)
             .in_language(None if raw_intl else request.language)
             .only(only_fields)
-            .chain(
-                lambda s: s.with_serialized_products() if serialize_products else None
-            )
+            .with_serialized_categories()
+            .with_serialized_feature_types()
+            .with_serialized_characteristic_values()
+            .chain(lambda s: s.with_serialized_products())
             .serialize()
             for product_type in product_types
         ]
@@ -87,7 +87,9 @@ class ProductTypeListView(ValidatableView[CreateProductTypeData], PaginatableVie
             product_type = self._service.create(valid_data, user=request.user)
             serialized_product_type = (
                 self._serializer_cls(product_type)
+                .with_serialized_categories()
                 .with_serialized_feature_types()
+                .chain(lambda s: s.with_serialized_products())
                 .serialize()
             )
             return {"data": serialized_product_type}, OK_CODE

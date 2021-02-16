@@ -19,6 +19,9 @@ class ProductTypeSlugView:
                 self._serializer_cls(product_type)
                 .in_language(request.language)
                 .with_serialized_categories()
+                .with_serialized_feature_types()
+                .with_serialized_characteristic_values()
+                .chain(lambda s: s.with_serialized_products())
                 .serialize()
             )
             return {"data": serialized_product_type}, OK_CODE

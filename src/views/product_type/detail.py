@@ -37,6 +37,8 @@ class ProductTypeDetailView(ValidatableView[UpdateProductTypeData]):
                 self._serializer_cls(product_type)
                 .in_language(None if raw_intl else request.language)
                 .with_serialized_categories()
+                .with_serialized_feature_types()
+                .chain(lambda s: s.with_serialized_products())
                 .serialize()
             )
             return {"data": serialized_product_type}, OK_CODE
@@ -56,7 +58,9 @@ class ProductTypeDetailView(ValidatableView[UpdateProductTypeData]):
             )
             serialized_product_type = (
                 self._serializer_cls(product_type)
+                .with_serialized_categories()
                 .with_serialized_feature_types()
+                .chain(lambda s: s.with_serialized_products())
                 .serialize()
             )
             return {"data": serialized_product_type}, OK_CODE
