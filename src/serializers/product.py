@@ -46,7 +46,15 @@ class ProductSerializer(IntlSerializer):
             ProductTypeSerializer,
             lambda serializer: (
                 serializer.in_language(self._language).only(
-                    ["id", "name", "image", "category", "feature_types", "slug"]
+                    [
+                        "id",
+                        "name",
+                        "image",
+                        "category",
+                        "feature_types",
+                        "slug",
+                        "is_deleted",
+                    ]
                 )
             ),
         )
