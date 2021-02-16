@@ -163,9 +163,6 @@ class ProductTypeService:
     @allow_roles(["admin", "manager"])
     def delete(self, id_: int, *args, **kwargs):
         try:
-            if self._product_repo.has_with_product_type(id_):
-                raise self.ProductTypeWithProductsIsUntouchable()
-
             self._repo.delete(id_)
         except self._repo.DoesNotExist:
             raise self.ProductTypeNotFound()

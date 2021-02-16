@@ -264,5 +264,15 @@ class ProductTypeRepo(NonDeletableRepo):
 
         return generated_slug
 
+    @with_session
+    def delete(self, id_: int, session: SQLAlchemySession = None):
+        product_type = self.get_by_id(id_, session=session)
+        product_type.is_deleted = True
+
+        for product in product_type.products:
+            product.is_deleted = True
+
+        return product_type
+
     class DoesNotExist(Exception):
         pass
