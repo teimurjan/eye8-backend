@@ -1,5 +1,5 @@
 from src.utils.request import SideEffectType
-from flask import jsonify, request
+from flask import jsonify, request, current_app as app
 from flask.views import View
 
 from src.constants.status_codes import (
@@ -58,6 +58,7 @@ class AbstractView(View):
                     response.set_cookie(
                         name,
                         cookie["value"],
+                        domain="." + app.config.get("HOST", ""),
                         httponly=cookie["httponly"],
                         expires=cookie["exp"],
                     )
