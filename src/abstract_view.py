@@ -58,7 +58,10 @@ class AbstractView(View):
                     response.set_cookie(
                         name,
                         cookie["value"],
-                        domain="." + app.config.get("HOST", "").replace("https://", ""),
+                        domain="."
+                        + app.config.get("HOST", "")
+                        .replace("https://", "")
+                        .replace("www.", ""),
                         httponly=cookie["httponly"],
                         expires=cookie["exp"],
                     )
