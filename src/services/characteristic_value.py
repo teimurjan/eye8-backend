@@ -49,6 +49,13 @@ class CharacteristicValueService:
     def get_all(self, offset: int = None, limit: int = None):
         return self._repo.get_all(offset=offset, limit=limit), self._repo.count_all()
 
+    def get_all_by_characteristic(
+        self, characteristic_id: int, offset: int = None, limit: int = None
+    ):
+        return self._repo.get_all_by_characteristic(
+            characteristic_id, offset=offset, limit=limit
+        )
+
     def get_one(self, id_):
         try:
             return self._repo.get_by_id(id_)

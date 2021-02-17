@@ -1,4 +1,7 @@
 import os
+from src.views.characteristic_value.by_characteristic import (
+    CharacteristicValueByCharacteristicView,
+)
 from src.views.auth.auth_check import AuthCheckView
 from src.utils.request import Request
 from src.cache.search_product_types import SearchProductTypesCache
@@ -258,9 +261,7 @@ class App:
         self.flask_app.add_url_rule(
             "/api/auth/check",
             view_func=AbstractView.as_view(
-                "auth_check",
-                concrete_view=AuthCheckView(),
-                middlewares=middlewares,
+                "auth_check", concrete_view=AuthCheckView(), middlewares=middlewares,
             ),
             methods=["GET"],
         )
@@ -388,6 +389,18 @@ class App:
                 middlewares=middlewares,
             ),
             methods=["GET", "PUT", "DELETE"],
+        )
+        self.flask_app.add_url_rule(
+            "/api/characteristics/<int:characteristic_id>/characteristic_values",
+            view_func=AbstractView.as_view(
+                "characteristic_values_by_characteristic",
+                concrete_view=CharacteristicValueByCharacteristicView(
+                    self.__characteristic_value_service,
+                    CharacteristicValueSerializer,
+                ),
+                middlewares=middlewares,
+            ),
+            methods=["GET"],
         )
         self.flask_app.add_url_rule(
             "/api/feature_types",

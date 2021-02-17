@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 from sqlalchemy.orm.session import Session as SQLAlchemySession
 from src.repos.base import Repo, with_session, set_intl_texts
 from src.models import Characteristic, CharacteristicValue, CharacteristicValueName
@@ -11,7 +11,7 @@ class CharacteristicValueRepo(Repo):
     @with_session
     def add_characteristic_value(
         self, names: Dict, characteristic: Characteristic, session: SQLAlchemySession
-    ):
+    ) -> CharacteristicValue:
         characteristic_value = CharacteristicValue()
 
         set_intl_texts(
@@ -41,7 +41,7 @@ class CharacteristicValueRepo(Repo):
         names: Dict,
         characteristic: Characteristic,
         session: SQLAlchemySession = None,
-    ):
+    ) -> CharacteristicValue:
         characteristic_value = self.get_by_id(id_, session=session)
 
         set_intl_texts(
@@ -60,6 +60,23 @@ class CharacteristicValueRepo(Repo):
         characteristic_value.updated_on
 
         return characteristic_value
+
+    @with_session
+    def get_all_by_characteristic(
+        self,
+        characteristic_id: int,
+        offset: int = None,
+        limit: int = None,
+        session: SQLAlchemySession = None,
+    ) -> List[CharacteristicValue]:
+        return (
+            self.get_query(session=session)
+            .filter(Characteristic.id == characteristic_id)
+            .order_by(CharacteristicValue.id)
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
 
     class DoesNotExist(Exception):
         pass
