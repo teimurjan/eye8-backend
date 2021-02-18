@@ -11,6 +11,12 @@ from src.constants.status_codes import (
 from src.errors import AccessRoleError, InvalidEntityFormat, NotAuthenticatedError
 
 
+def get_cookie_domain():
+    return (
+        "." + app.config.get("HOST", "").replace("https://", "").replace("www.", ""),
+    )
+
+
 class AbstractView(View):
     def __init__(self, concrete_view, middlewares, on_respond_hooks=[]):
         self._concrete_view = concrete_view
@@ -32,7 +38,7 @@ class AbstractView(View):
 
             if len(result) > 2 and isinstance(result[2], dict):
                 for name, value in result[2].items():
-                    response.set_cookie(name, value, httponly=True)
+                    response.set_cookie(name, value, domain=get_cookie_domain(), httponly=True)
 
             self._handle_middleware_side_effects(request, response)
             self._handle_on_respond_hooks(request, body, status)
@@ -58,10 +64,7 @@ class AbstractView(View):
                     response.set_cookie(
                         name,
                         cookie["value"],
-                        domain="."
-                        + app.config.get("HOST", "")
-                        .replace("https://", "")
-                        .replace("www.", ""),
+                        domain=get_cookie_domain(),
                         httponly=cookie["httponly"],
                         expires=cookie["exp"],
                     )
