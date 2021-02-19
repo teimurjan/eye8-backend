@@ -89,6 +89,7 @@ class ProductTypeListView(ValidatableView[CreateProductTypeData], PaginatableVie
                 self._serializer_cls(product_type)
                 .with_serialized_categories()
                 .with_serialized_feature_types()
+                .with_serialized_characteristic_values()
                 .chain(lambda s: s.with_serialized_products())
                 .serialize()
             )
