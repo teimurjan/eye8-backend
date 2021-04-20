@@ -21,7 +21,7 @@ class ProductTypeSerializer(IntlSerializer):
         self._categories = product_type.categories
         self._feature_types = product_type.feature_types
         self._characteristic_values = product_type.characteristic_values
-        # When called from ProductTypeSerializer product.product_type causes DetachedInstanceError
+        # When called from ProductSerializer product.product_type causes DetachedInstanceError
         self._init_relation_safely("_products", product_type, "products", None)
         self._slug = product_type.slug
         self._is_deleted = product_type.is_deleted

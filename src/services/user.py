@@ -40,7 +40,7 @@ class UserService:
                 TokenFactory.create(ACCESS_TOKEN_TYPE, user),
                 TokenFactory.create(REFRESH_TOKEN_TYPE, user),
             )
-        except (jwt.InvalidTokenError, self._repo.DoesNotExist):
+        except Exception as e:
             raise self.TokenInvalid()
 
     class AuthCredsInvalid(Exception):
