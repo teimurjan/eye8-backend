@@ -6,10 +6,10 @@ class BannerSerializer(IntlSerializer):
     def __init__(self, banner: Banner):
         super().__init__()
         self._id = banner.id
-        self._text_en = feature_type.text_en
-        self._text_ru = feature_type.text_ru
-        self._link_text_en = feature_type.link_text_en
-        self._link_text_ru = feature_type.link_text_ru
+        self._text_en = banner.text_en
+        self._text_ru = banner.text_ru
+        self._link_text_en = banner.link_text_en
+        self._link_text_ru = banner.link_text_ru
         self._link = banner.link
         self._image = banner.image
         self._text_color = banner.text_color
