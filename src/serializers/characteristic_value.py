@@ -7,7 +7,8 @@ class CharacteristicValueSerializer(IntlSerializer):
     def __init__(self, characteristic_value):
         super().__init__()
         self._id = characteristic_value.id
-        self._names = characteristic_value.names
+        self._name_en = characteristic_value.name_en
+        self._name_ru = characteristic_value.name_ru
         self._characteristic = characteristic_value.characteristic
         self._created_on = characteristic_value.created_on
         self._updated_on = characteristic_value.updated_on
@@ -16,15 +17,12 @@ class CharacteristicValueSerializer(IntlSerializer):
         return self._filter_fields(
             {
                 "id": self._id,
-                "name": self._serialize_name(),
+                "name": self._get_intl_field_from("name", self),
                 "characteristic": self._serialize_characteristic(),
                 "created_on": self._created_on,
                 "updated_on": self._updated_on,
             }
         )
-
-    def _serialize_name(self):
-        return self._get_intl_field_from(self._names)
 
     def with_serialized_characteristic(self):
         self._with_serialized_relation(

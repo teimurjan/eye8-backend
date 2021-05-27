@@ -33,27 +33,14 @@ ProductTypeXCategoryTable = Table(
 class ProductType(NonDeletableModel):
     __tablename__ = "product_type"
 
-    names = orm.relationship(
-        "ProductTypeName",
-        backref="product_type",
-        lazy="joined",
-        cascade="all, delete, delete-orphan",
-    )
-
+    name_en = Column(String(255), nullable=False)
+    name_ru = Column(String(255), nullable=False)
+    description_en = Column(String(255), nullable=False)
+    description_ru = Column(String(255), nullable=False)
+    short_description_en = Column(String(255), nullable=False)
+    short_description_ru = Column(String(255), nullable=False)
     instagram_links = orm.relationship(
         "ProductTypeInstagramLink",
-        backref="product_type",
-        lazy="joined",
-        cascade="all, delete, delete-orphan",
-    )
-    descriptions = orm.relationship(
-        "ProductTypeDescription",
-        backref="product_type",
-        lazy="joined",
-        cascade="all, delete, delete-orphan",
-    )
-    short_descriptions = orm.relationship(
-        "ProductTypeShortDescription",
         backref="product_type",
         lazy="joined",
         cascade="all, delete, delete-orphan",
@@ -111,16 +98,4 @@ class ProductType(NonDeletableModel):
                 )
             ]
         ).label("products_available")
-
-    def __getitem__(self, key):
-        if key == "names":
-            return self.names
-        if key == "descriptions":
-            return self.descriptions
-        if key == "short_descriptions":
-            return self.short_descriptions
-        if key == "instagram_links":
-            return self.instagram_links
-
-        return super().__getitem__(key)
 

@@ -5,8 +5,6 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session as SQLAlchemySession
 from sqlalchemy.orm.query import Query as SQLAlchemyQuery
 
-from src.models.intl import IntlText, Language
-
 T = TypeVar("T")
 
 
@@ -163,20 +161,3 @@ class NonDeletableRepo(Repo):
             .all()
         )
 
-
-def set_intl_texts(
-    texts: Dict,
-    owner: T,
-    owner_field_name: str,
-    intl_text_model_cls: Type[IntlText],
-    session: SQLAlchemySession = None,
-):
-    new_texts = []
-    for name, value in texts.items():
-        text = intl_text_model_cls()
-        text.value = value
-        language = session.query(Language).filter(Language.name == name).first()
-        setattr(text, "language", language)
-        new_texts.append(text)
-
-    setattr(owner, owner_field_name, new_texts)

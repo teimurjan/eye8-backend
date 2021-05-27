@@ -1,9 +1,8 @@
 from typing import Dict
-
 from sqlalchemy.orm.session import Session as SQLAlchemySession
 
-from src.repos.base import Repo, set_intl_texts, with_session
-from src.models import Characteristic, CharacteristicName
+from src.repos.base import Repo, with_session
+from src.models import Characteristic
 
 
 class CharacteristicRepo(Repo):
@@ -14,14 +13,12 @@ class CharacteristicRepo(Repo):
     def add_characteristic(self, names: Dict, session: SQLAlchemySession = None):
         characteristic = Characteristic()
 
-        set_intl_texts(
-            names, characteristic, "names", CharacteristicName, session=session
-        )
+        characteristic.name_en = names["en"]
+        characteristic.name_ru = names["ru"]
 
         session.add(characteristic)
         session.flush()
 
-        characteristic.names
         characteristic.created_on
         characteristic.updated_on
 
@@ -33,9 +30,8 @@ class CharacteristicRepo(Repo):
     ):
         characteristic = self.get_by_id(id_, session=session)
 
-        set_intl_texts(
-            names, characteristic, "names", CharacteristicName, session=session
-        )
+        characteristic.name_en = names["en"]
+        characteristic.name_ru = names["ru"]
 
         session.flush()
 

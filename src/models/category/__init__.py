@@ -1,21 +1,12 @@
-from sqlalchemy import Column, String, Integer, ForeignKey, orm
+from sqlalchemy import Column, String, Integer, ForeignKey, String
 from src.models.base import BaseModel
 
 
 class Category(BaseModel):
     __tablename__ = "category"
 
-    names = orm.relationship(
-        "CategoryName",
-        backref="category",
-        lazy="joined",
-        cascade="all, delete, delete-orphan",
-    )
+    name_en = Column(String(255), nullable=False)
+    name_ru = Column(String(255), nullable=False)
     parent_category_id = Column(Integer, ForeignKey("category.id"), nullable=True, index=True)
     slug = Column(String(255), nullable=False, unique=True)
-
-    def __getitem__(self, key):
-        if key == "names":
-            return self.names
-
-        return super().__getitem__(key)
+    

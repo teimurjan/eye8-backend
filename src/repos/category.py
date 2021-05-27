@@ -3,8 +3,8 @@ from sqlalchemy.orm.query import aliased
 from sqlalchemy.orm.session import Session as SQLAlchemySession
 from sqlalchemy.sql.functions import func
 
-from src.models import Category, CategoryName
-from src.repos.base import Repo, set_intl_texts, with_session
+from src.models import Category
+from src.repos.base import Repo, with_session
 from src.utils.slug import generate_slug
 
 
@@ -17,9 +17,10 @@ class CategoryRepo(Repo):
         self, names: Dict, parent_category_id: int, session: SQLAlchemySession = None,
     ):
         category = Category()
-        category.parent_category_id = parent_category_id
 
-        set_intl_texts(names, category, "names", CategoryName, session=session)
+        category.parent_category_id = parent_category_id
+        category.name_en = names["en"]
+        category.name_ru = names["ru"]
         category.slug = self.get_unique_slug(category, session=session)
 
         session.add(category)
@@ -40,8 +41,8 @@ class CategoryRepo(Repo):
     ):
         category = self.get_by_id(id_, session=session)
         category.parent_category_id = parent_category_id
-
-        set_intl_texts(names, category, "names", CategoryName, session=session)
+        category.name_en = names["en"]
+        category.name_ru = names["ru"]
         category.slug = self.get_unique_slug(category, session=session)
 
         session.flush()
@@ -89,24 +90,22 @@ class CategoryRepo(Repo):
 
     @with_session
     def get_unique_slug(self, category: Category, session: SQLAlchemySession = None):
-        generated_slug = generate_slug(category)
+        generated_slug = generate_slug(category.name_en)
         if generated_slug == category.slug:
             return generated_slug
 
         if self.is_slug_used(generated_slug, session=session):
-            return generate_slug(category, with_hash=True)
+            return generate_slug(category.name_en, with_hash=True)
 
         return generated_slug
 
     @with_session
     def search(self, query: str, session: SQLAlchemySession = None):
-        names = (
-            session.query(CategoryName)
-            .filter(func.lower(CategoryName.value).like(f"%{query.lower()}%"))
-            .all()
+        return (
+            self.get_query(session=session)
+            .filter(func.lower(Category.name_en).like(f"%{query.lower()}%"))
+            .limit(7)
         )
-        ids = [name.category_id for name in names]
-        return self.filter_by_ids(ids, limit=7)
 
     class DoesNotExist(Exception):
         pass

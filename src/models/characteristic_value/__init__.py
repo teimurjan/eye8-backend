@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Column, Integer, ForeignKey, orm
+from sqlalchemy import Table, Column, Integer, ForeignKey, orm, String
 from src.models.base import BaseModel
 
 ProductTypeXCharacteristicValueTable = Table(
@@ -24,12 +24,9 @@ ProductTypeXCharacteristicValueTable = Table(
 class CharacteristicValue(BaseModel):
     __tablename__ = "characteristic_value"
 
-    names = orm.relationship(
-        "CharacteristicValueName",
-        backref="characteristic_value",
-        lazy="joined",
-        cascade="all, delete, delete-orphan",
-    )
+    name_en = Column(String(255), nullable=False)
+    name_ru = Column(String(255), nullable=False)
+
     characteristic_id = Column(
         Integer, ForeignKey("characteristic.id"), nullable=False, index=True
     )
@@ -40,9 +37,3 @@ class CharacteristicValue(BaseModel):
         lazy="select",
         backref=orm.backref("characteristic_values", lazy="joined"),
     )
-
-    def __getitem__(self, key):
-        if key == "names":
-            return self.names
-
-        return super().__getitem__(key)

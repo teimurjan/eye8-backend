@@ -7,16 +7,13 @@ from sqlalchemy import select, func
 
 from src.models import (
     ProductType,
-    ProductTypeDescription,
-    ProductTypeName,
-    ProductTypeShortDescription,
     Category,
     ProductTypeInstagramLink,
     FeatureType,
     Product,
     CharacteristicValue,
 )
-from src.repos.base import NonDeletableRepo, set_intl_texts, with_session
+from src.repos.base import NonDeletableRepo, with_session
 from src.storage.base import Storage
 from src.utils.slug import generate_slug
 from src.utils.sorting import ProductTypeSortingType
@@ -51,25 +48,14 @@ class ProductTypeRepo(NonDeletableRepo):
     ):
         product_type = ProductType()
 
-        set_intl_texts(names, product_type, "names", ProductTypeName, session=session)
+        product_type.name_en = names['en']
+        product_type.name_ru = names['ru']
+        product_type.description_en = descriptions['en']
+        product_type.description_ru = descriptions['ru']
+        product_type.short_description_en = short_descriptions['en']
+        product_type.short_description_ru = short_descriptions['ru']
         product_type.slug = self.get_unique_slug(product_type, session=session)
-        set_intl_texts(
-            descriptions,
-            product_type,
-            "descriptions",
-            ProductTypeDescription,
-            session=session,
-        )
-        set_intl_texts(
-            short_descriptions,
-            product_type,
-            "short_descriptions",
-            ProductTypeShortDescription,
-            session=session,
-        )
-
         set_instagram_links(product_type, instagram_links)
-
         product_type.feature_types = feature_types
         product_type.characteristic_values = characteristic_values
         product_type.categories = categories
@@ -99,24 +85,13 @@ class ProductTypeRepo(NonDeletableRepo):
     ):
         product_type = self.get_by_id(id_, session=session)
 
-        set_intl_texts(names, product_type, "names", ProductTypeName, session=session)
-        set_intl_texts(
-            descriptions,
-            product_type,
-            "descriptions",
-            ProductTypeDescription,
-            session=session,
-        )
-        set_intl_texts(
-            short_descriptions,
-            product_type,
-            "short_descriptions",
-            ProductTypeShortDescription,
-            session=session,
-        )
-
+        product_type.name_en = names['en']
+        product_type.name_ru = names['ru']
+        product_type.description_en = descriptions['en']
+        product_type.description_ru = descriptions['ru']
+        product_type.short_description_en = short_descriptions['en']
+        product_type.short_description_ru = short_descriptions['ru']
         set_instagram_links(product_type, instagram_links)
-
         product_type.feature_types = feature_types
         product_type.characteristic_values = characteristic_values
         product_type.slug = self.get_unique_slug(product_type, session=session)
@@ -207,8 +182,8 @@ class ProductTypeRepo(NonDeletableRepo):
         session: SQLAlchemySession = None,
     ):
         search_treshold = 0.1
-        query = select([ProductTypeName.product_type_id]).where(
-            func.similarity(ProductTypeName.value, query) > search_treshold
+        query = select([ProductType.id]).where(
+            func.similarity(ProductType.name_en, query) > search_treshold
         )
         ids = [row[0] for row in session.connection().execute(query)]
 
@@ -255,12 +230,12 @@ class ProductTypeRepo(NonDeletableRepo):
     def get_unique_slug(
         self, product_type: ProductType, session: SQLAlchemySession = None
     ):
-        generated_slug = generate_slug(product_type)
+        generated_slug = generate_slug(product_type.name_en)
         if generated_slug == product_type.slug:
             return generated_slug
 
         if self.is_slug_used(generated_slug, session=session):
-            return generate_slug(product_type, with_hash=True)
+            return generate_slug(product_type.name_en, with_hash=True)
 
         return generated_slug
 

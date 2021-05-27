@@ -1,9 +1,9 @@
-from typing import List, Optional, TypedDict
+from typing import List, Optional
 from enum import Enum
 
 from flask import Request as FlaskRequest
 
-from src.models import Language, User
+from src.models import User
 
 
 class SideEffectType(Enum):
@@ -28,7 +28,7 @@ class Request(FlaskRequest):
         return getattr(self, "__language")
 
     @language.setter
-    def language(self, language: Language):
+    def language(self, language: str):
         setattr(self, "__language", language)
 
     @property

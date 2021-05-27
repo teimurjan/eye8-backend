@@ -1,9 +1,8 @@
 from typing import Dict
-
 from sqlalchemy.orm.session import Session as SQLAlchemySession
 
-from src.repos.base import Repo, set_intl_texts, with_session
-from src.models import FeatureType, FeatureTypeName, Category
+from src.repos.base import Repo, with_session
+from src.models import FeatureType, Category
 
 
 class FeatureTypeRepo(Repo):
@@ -14,12 +13,12 @@ class FeatureTypeRepo(Repo):
     def add_feature_type(self, names: Dict, session: SQLAlchemySession = None):
         feature_type = FeatureType()
 
-        set_intl_texts(names, feature_type, "names", FeatureTypeName, session=session)
+        feature_type.name_en = names["en"]
+        feature_type.name_ru = names["ru"]
 
         session.add(feature_type)
         session.flush()
 
-        feature_type.names
         feature_type.created_on
         feature_type.updated_on
 
@@ -31,7 +30,8 @@ class FeatureTypeRepo(Repo):
     ):
         feature_type = self.get_by_id(id_, session=session)
 
-        set_intl_texts(names, feature_type, "names", FeatureTypeName, session=session)
+        feature_type.name_en = names["en"]
+        feature_type.name_ru = names["ru"]
 
         session.flush()
 

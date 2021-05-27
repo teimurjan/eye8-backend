@@ -27,7 +27,6 @@ from src.repos.currency_rate import CurrencyRateRepo
 from src.repos.characteristic import CharacteristicRepo
 from src.repos.feature_type import FeatureTypeRepo
 from src.repos.feature_value import FeatureValueRepo
-from src.repos.language import LanguageRepo
 from src.repos.order import OrderRepo
 from src.repos.product import ProductRepo
 from src.repos.product_type import ProductTypeRepo
@@ -52,7 +51,6 @@ from src.services.characteristic import CharacteristicService
 from src.services.characteristic_value import CharacteristicValueService
 from src.services.feature_type import FeatureTypeService
 from src.services.feature_value import FeatureValueService
-from src.services.language import LanguageService
 from src.services.order import OrderService
 from src.services.product import FeatureValuesPolicy, ProductService
 from src.services.product_type import ProductTypeService
@@ -161,7 +159,6 @@ class App:
         self.__characteristic_value_repo = CharacteristicValueRepo(self.__db_engine)
         self.__feature_type_repo = FeatureTypeRepo(self.__db_engine)
         self.__feature_value_repo = FeatureValueRepo(self.__db_engine)
-        self.__language_repo = LanguageRepo(self.__db_engine)
         self.__product_type_repo = ProductTypeRepo(
             self.__db_engine, self.__file_storage
         )
@@ -187,7 +184,6 @@ class App:
         self.__feature_value_service = FeatureValueService(
             self.__feature_value_repo, self.__feature_type_repo
         )
-        self.__language_service = LanguageService(self.__language_repo)
         self.__product_type_service = ProductTypeService(
             self.__product_type_repo,
             self.__category_repo,
@@ -219,7 +215,7 @@ class App:
 
     def __init_api_routes(self):
         authenticate_middleware = AuthenticateHttpMiddleware(self.__user_service)
-        language_middleware = LanguageHttpMiddleware(self.__language_repo)
+        language_middleware = LanguageHttpMiddleware()
         middlewares = [authenticate_middleware, language_middleware]
 
         category_product_types_cache = CategoryProductTypesCache(self.cache)

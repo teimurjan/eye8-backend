@@ -1,5 +1,4 @@
 from src.validation_rules.registration import RegistrationData
-from src.models.intl import Language
 import jwt
 from flask import current_app as app, render_template
 
@@ -31,7 +30,7 @@ class SignupService:
                 data["name"], data["email"], data["password"], session=s
             )
 
-    def create_and_send(self, data: RegistrationData, language: Language = None):
+    def create_and_send(self, data: RegistrationData, language: str = None):
         signup = self.create_or_update(data)
 
         link = (
@@ -40,19 +39,19 @@ class SignupService:
             + TokenFactory.create(SIGNUP_TOKEN_TYPE, signup)
         )
 
-        title = "Hello!" if language.name == "en" else "Привет!"
+        title = "Hello!" if language == "en" else "Привет!"
         description = (
             "You're almost eye8 user. Click to the button to proceed."
-            if language.name == "en"
+            if language == "en"
             else "Вы всего в шаге от того, чтобы стать пользователем eye8. Нажмите на кнопку, чтобы продолжить."
         )
         link_text = (
             "Complete registration"
-            if language.name == "en"
+            if language == "en"
             else "Завершить регистрацию"
         )
         preheader = (
-            "Signup at eye8.kg" if language.name == "en" else "Регистрация на eye8.kg"
+            "Signup at eye8.kg" if language == "en" else "Регистрация на eye8.kg"
         )
         subject = link_text
         body = render_template(

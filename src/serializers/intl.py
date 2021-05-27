@@ -1,30 +1,26 @@
 from abc import abstractmethod
-from src.models.intl import IntlText, Language
-from typing import List, Optional
+from typing import Optional, TypeVar
 
 from src.serializers.base import Serializer
+
+T = TypeVar("T")
 
 
 class IntlSerializer(Serializer):
     def __init__(self):
         super().__init__()
-        self._language: Optional[Language] = None
+        self._language: Optional[str] = None
 
-    def in_language(self, language: Optional[Language]):
+    def in_language(self, language: Optional[str]):
         if language:
             self._language = language
         return self
 
-    def _get_intl_field_from(self, all_fields: List[IntlText]):
+    def _get_intl_field_from(self, key: str, obj: T):
         if self._language is None:
-            return {field.language.name: field.value for field in all_fields}
+            return {"en": getattr(obj, f"_{key}_en"), "ru": getattr(obj, f"_{key}_ru")}
 
-        values = [
-            field.value
-            for field in all_fields
-            if field.language.id == self._language.id
-        ]
-        return "" if len(values) == 0 else values[0]
+        return getattr(obj, f"_{key}_{self._language}")
 
     @abstractmethod
     def serialize(self) -> str:

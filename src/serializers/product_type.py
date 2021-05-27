@@ -13,9 +13,12 @@ class ProductTypeSerializer(IntlSerializer):
     def __init__(self, product_type):
         super().__init__()
         self._id = product_type.id
-        self._names = product_type.names
-        self._descriptions = product_type.descriptions
-        self._short_descriptions = product_type.short_descriptions
+        self._name_en = product_type.name_en
+        self._name_ru = product_type.name_ru
+        self._description_en = product_type.description_en
+        self._description_ru = product_type.description_ru
+        self._short_description_en = product_type.short_description_en
+        self._short_description_ru = product_type.short_description_ru
         self._instagram_links = product_type.instagram_links
         self._image = product_type.image
         self._categories = product_type.categories
@@ -33,9 +36,11 @@ class ProductTypeSerializer(IntlSerializer):
         return self._filter_fields(
             {
                 "id": self._id,
-                "name": self._serialize_name(),
-                "description": self._serialize_description(),
-                "short_description": self._serialize_short_description(),
+                "name": self._get_intl_field_from("name", self),
+                "description": self._get_intl_field_from("description", self),
+                "short_description": self._get_intl_field_from(
+                    "short_description", self
+                ),
                 "instagram_links": self._serialize_instagram_links(),
                 "image": self._image,
                 "categories": self._serialize_categories(),
@@ -49,15 +54,6 @@ class ProductTypeSerializer(IntlSerializer):
                 "is_deleted": self._is_deleted,
             }
         )
-
-    def _serialize_name(self):
-        return self._get_intl_field_from(self._names)
-
-    def _serialize_description(self):
-        return self._get_intl_field_from(self._descriptions)
-
-    def _serialize_short_description(self):
-        return self._get_intl_field_from(self._short_descriptions)
 
     def _serialize_instagram_links(self):
         return [

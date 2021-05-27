@@ -1,7 +1,7 @@
 from typing import Dict, List
 from sqlalchemy.orm.session import Session as SQLAlchemySession
-from src.repos.base import Repo, with_session, set_intl_texts
-from src.models import Characteristic, CharacteristicValue, CharacteristicValueName
+from src.repos.base import Repo, with_session
+from src.models import Characteristic, CharacteristicValue
 
 
 class CharacteristicValueRepo(Repo):
@@ -10,24 +10,20 @@ class CharacteristicValueRepo(Repo):
 
     @with_session
     def add_characteristic_value(
-        self, names: Dict, characteristic: Characteristic, session: SQLAlchemySession
+        self,
+        names: Dict,
+        characteristic: Characteristic,
+        session: SQLAlchemySession,
     ) -> CharacteristicValue:
         characteristic_value = CharacteristicValue()
 
-        set_intl_texts(
-            names,
-            characteristic_value,
-            "names",
-            CharacteristicValueName,
-            session=session,
-        )
-
+        characteristic_value.name_en = names['en']
+        characteristic_value.name_ru = names['ru']
         characteristic_value.characteristic_id = characteristic.id
 
         session.add(characteristic_value)
         session.flush()
 
-        characteristic_value.names
         characteristic_value.characteristic
         characteristic_value.created_on
         characteristic_value.updated_on
@@ -43,15 +39,8 @@ class CharacteristicValueRepo(Repo):
         session: SQLAlchemySession = None,
     ) -> CharacteristicValue:
         characteristic_value = self.get_by_id(id_, session=session)
-
-        set_intl_texts(
-            names,
-            characteristic_value,
-            "names",
-            CharacteristicValueName,
-            session=session,
-        )
-
+        characteristic_value.name_en = names['en']
+        characteristic_value.name_ru = names['ru']
         characteristic_value.characteristic_id = characteristic.id
 
         session.flush()

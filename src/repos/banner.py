@@ -1,6 +1,6 @@
 from src.storage.base import Storage
-from src.models import Banner, BannerText, BannerLinkText
-from src.repos.base import Repo, with_session, set_intl_texts
+from src.models import Banner
+from src.repos.base import Repo, with_session
 
 
 class BannerRepo(Repo):
@@ -11,8 +11,10 @@ class BannerRepo(Repo):
     @with_session
     def add_banner(
         self,
-        texts,
-        link_texts,
+        text_en,
+        text_ru,
+        link_text_en,
+        link_text_ru,
         link,
         image,
         text_color,
@@ -24,11 +26,10 @@ class BannerRepo(Repo):
     ):
         banner = Banner()
 
-        set_intl_texts(texts, banner, "texts", BannerText, session=session)
-        set_intl_texts(
-            link_texts, banner, "link_texts", BannerLinkText, session=session
-        )
-
+        banner.text_en = text_en
+        banner.text_ru = text_ru
+        banner.link_text_en = link_text_en
+        banner.link_text_ru = link_text_ru
         banner.link = link
         banner.text_color = text_color
         banner.text_top_offset = text_top_offset
@@ -41,7 +42,6 @@ class BannerRepo(Repo):
         session.add(banner)
         session.flush()
 
-        banner.link_texts
         banner.created_on
         banner.updated_on
 
@@ -51,8 +51,10 @@ class BannerRepo(Repo):
     def update_banner(
         self,
         id_,
-        texts,
-        link_texts,
+        text_en,
+        text_ru,
+        link_text_en,
+        link_text_ru,
         link,
         image,
         text_color,
@@ -63,12 +65,11 @@ class BannerRepo(Repo):
         session,
     ):
         banner = self.get_by_id(id_, session=session)
-
-        set_intl_texts(texts, banner, "texts", BannerText, session=session)
-        set_intl_texts(
-            link_texts, banner, "link_texts", BannerLinkText, session=session
-        )
-
+        
+        banner.text_en = text_en
+        banner.text_ru = text_ru
+        banner.link_text_en = link_text_en
+        banner.link_text_ru = link_text_ru
         banner.link = link
         banner.text_color = text_color
         banner.text_top_offset = text_top_offset

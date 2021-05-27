@@ -6,8 +6,10 @@ class BannerSerializer(IntlSerializer):
     def __init__(self, banner: Banner):
         super().__init__()
         self._id = banner.id
-        self._texts = banner.texts
-        self._link_texts = banner.link_texts
+        self._text_en = feature_type.text_en
+        self._text_ru = feature_type.text_ru
+        self._link_text_en = feature_type.link_text_en
+        self._link_text_ru = feature_type.link_text_ru
         self._link = banner.link
         self._image = banner.image
         self._text_color = banner.text_color
@@ -22,8 +24,8 @@ class BannerSerializer(IntlSerializer):
         return self._filter_fields(
             {
                 "id": self._id,
-                "text": self._serialize_text(),
-                "link_text": self._serialize_link_text(),
+                "text": self._get_intl_field_from("text", self),
+                "link_text": self._get_intl_field_from("link_text", self),
                 "link": self._link,
                 "text_color": self._text_color,
                 "image": self._image,
@@ -36,8 +38,3 @@ class BannerSerializer(IntlSerializer):
             }
         )
 
-    def _serialize_text(self):
-        return self._get_intl_field_from(self._texts)
-
-    def _serialize_link_text(self):
-        return self._get_intl_field_from(self._link_texts)

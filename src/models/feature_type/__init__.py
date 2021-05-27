@@ -1,4 +1,4 @@
-from sqlalchemy import orm, Table, Integer, Column, ForeignKey
+from sqlalchemy import orm, Table, Integer, Column, ForeignKey, String
 from src.models.base import BaseModel
 
 ProductTypeXFeatureTypeTable = Table(
@@ -24,12 +24,8 @@ ProductTypeXFeatureTypeTable = Table(
 class FeatureType(BaseModel):
     __tablename__ = "feature_type"
 
-    names = orm.relationship(
-        "FeatureTypeName",
-        backref="feature_type",
-        lazy="joined",
-        cascade="all, delete, delete-orphan",
-    )
+    name_en = Column(String(255), nullable=False)
+    name_ru = Column(String(255), nullable=False)
     feature_values = orm.relationship(
         "FeatureValue", lazy="select", cascade="all, delete, delete-orphan"
     )
@@ -39,9 +35,3 @@ class FeatureType(BaseModel):
         lazy="select",
         backref=orm.backref("feature_types", lazy="joined"),
     )
-
-    def __getitem__(self, key):
-        if key == "names":
-            return self.names
-
-        return super().__getitem__(key)
