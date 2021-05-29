@@ -12,6 +12,8 @@ from src.errors import AccessRoleError, InvalidEntityFormat, NotAuthenticatedErr
 
 
 def get_cookie_domain():
+    if app.config.get("DEBUG"):
+        return app.config.get("HOST")
     return "." + app.config.get("HOST", "").replace("https://", "").replace("www.", "")
 
 
@@ -37,7 +39,10 @@ class AbstractView(View):
             if len(result) > 2 and isinstance(result[2], dict):
                 for name, value in result[2].items():
                     response.set_cookie(
-                        name, value, domain=get_cookie_domain(), httponly=True
+                        name,
+                        value,
+                        domain=get_cookie_domain(),
+                        httponly=True,
                     )
 
             self._handle_middleware_side_effects(request, response)
