@@ -11,10 +11,8 @@ class BannerRepo(Repo):
     @with_session
     def add_banner(
         self,
-        text_en,
-        text_ru,
-        link_text_en,
-        link_text_ru,
+        texts,
+        link_texts,
         link,
         image,
         text_color,
@@ -26,10 +24,10 @@ class BannerRepo(Repo):
     ):
         banner = Banner()
 
-        banner.text_en = text_en
-        banner.text_ru = text_ru
-        banner.link_text_en = link_text_en
-        banner.link_text_ru = link_text_ru
+        banner.text_en = texts.get('en')
+        banner.text_ru = texts.get('ru')
+        banner.link_text_en = link_texts.get('en')
+        banner.link_text_ru = link_texts.get('ru')
         banner.link = link
         banner.text_color = text_color
         banner.text_top_offset = text_top_offset
@@ -51,10 +49,8 @@ class BannerRepo(Repo):
     def update_banner(
         self,
         id_,
-        text_en,
-        text_ru,
-        link_text_en,
-        link_text_ru,
+        texts,
+        link_texts,
         link,
         image,
         text_color,
@@ -66,10 +62,10 @@ class BannerRepo(Repo):
     ):
         banner = self.get_by_id(id_, session=session)
         
-        banner.text_en = text_en
-        banner.text_ru = text_ru
-        banner.link_text_en = link_text_en
-        banner.link_text_ru = link_text_ru
+        banner.text_en = texts.get('en')
+        banner.text_ru = texts.get('ru')
+        banner.link_text_en = link_texts.get('en')
+        banner.link_text_ru = link_texts.get('ru')
         banner.link = link
         banner.text_color = text_color
         banner.text_top_offset = text_top_offset

@@ -34,7 +34,7 @@ class BannerService:
     @allow_roles(["admin", "manager"])
     def update(self, id_: int, data: UpdateBannerData, *args, **kwargs):
         try:
-            category = self._repo.update_banner(
+            banner = self._repo.update_banner(
                 id_,
                 data["texts"],
                 data["link_texts"],
@@ -47,7 +47,7 @@ class BannerService:
                 data.get("text_bottom_offset"),
             )
 
-            return category
+            return banner
         except self._repo.DoesNotExist:
             raise self.BannerNotFound()
 
